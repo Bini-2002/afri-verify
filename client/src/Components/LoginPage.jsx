@@ -2,7 +2,7 @@ import { useId, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import logo from '../images/logo-removebg-preview.png'
-import heroSide from '../images/onboarding page.png'
+import heroSide from '../images/cyber-map.png'
 import googleIcon from '../images/google.png'
 
 function EyeIcon({ open }) {

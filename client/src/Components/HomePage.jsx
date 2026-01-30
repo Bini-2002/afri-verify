@@ -12,6 +12,11 @@ import partnerUn from '../images/un-logo.jpg'
 import partnerAu from '../images/africa-union.jpg'
 import partnerAfdb from '../images/africa-development-bank.jpg'
 
+import facebookIcon from '../images/facebook.png'
+import twitterIcon from '../images/twitter.png'
+import instagramIcon from '../images/instagram.png'
+import linkedinIcon from '../images/linkedin.png'
+
 function NavLink({ to, children }) {
   return (
     <Link
@@ -204,56 +209,28 @@ export default function HomePage() {
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/15"
                   aria-label="Facebook"
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-5 w-5"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path d="M22 12a10 10 0 1 0-11.6 9.9v-7H8v-3h2.4V9.8c0-2.4 1.4-3.8 3.7-3.8 1.1 0 2.2.2 2.2.2v2.4h-1.2c-1.2 0-1.6.8-1.6 1.5V12H18l-.5 3h-2.8v7A10 10 0 0 0 22 12z" />
-                  </svg>
+                  <img src={facebookIcon} alt="" className="h-5 w-5" />
                 </a>
                 <a
                   href="#"
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/15"
                   aria-label="X"
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-5 w-5"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path d="M18.9 2H22l-6.8 7.8L23 22h-6.8l-5.3-6.9L4.8 22H2l7.4-8.5L1 2h6.9l4.8 6.3L18.9 2zm-1.2 18h1.7L7.2 3.9H5.4L17.7 20z" />
-                  </svg>
+                  <img src={twitterIcon} alt="" className="h-5 w-5" />
                 </a>
                 <a
                   href="#"
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/15"
                   aria-label="Instagram"
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-5 w-5"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm10 2H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3zm-5 4.5A5.5 5.5 0 1 1 6.5 12 5.5 5.5 0 0 1 12 8.5zm0 2A3.5 3.5 0 1 0 15.5 12 3.5 3.5 0 0 0 12 10.5zM18 6.6a1 1 0 1 1-1 1 1 1 0 0 1 1-1z" />
-                  </svg>
+                  <img src={instagramIcon} alt="" className="h-5 w-5" />
                 </a>
                 <a
                   href="#"
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/15"
                   aria-label="LinkedIn"
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-5 w-5"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path d="M4.98 3.5A2.5 2.5 0 1 1 5 8.5a2.5 2.5 0 0 1-.02-5zM3 9h4v12H3V9zm7 0h3.8v1.6h.1c.5-1 1.8-2 3.8-2 4 0 4.8 2.6 4.8 6V21h-4v-5.1c0-1.2 0-2.7-1.7-2.7s-2 1.3-2 2.6V21h-4V9z" />
-                  </svg>
+                  <img src={linkedinIcon} alt="" className="h-5 w-5" />
                 </a>
               </div>
             </div>
