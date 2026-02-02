@@ -30,7 +30,7 @@ export default function DocumentRepositoryPage() {
               type="button"
               className="inline-flex items-center justify-center gap-2 rounded-full bg-amber-50 px-5 py-2.5 text-sm font-semibold text-slate-800 shadow-sm ring-1 ring-slate-200 hover:bg-amber-100"
             >
-              <AddSquare size={18} variant="Bold" className="text-slate-700" />
+              <AddSquare size={18} variant="Bold" color="#334155" />
               Upload New Document
             </button>
           </div>
@@ -49,7 +49,7 @@ export default function DocumentRepositoryPage() {
 
             <div className="relative w-full lg:w-[360px]">
               <span className="pointer-events-none absolute inset-y-0 left-3 inline-flex items-center">
-                <SearchNormal1 size={18} variant="Linear" className="text-slate-500" />
+                <SearchNormal1 size={18} variant="Linear" color="#64748b" />
               </span>
               <input
                 type="search"

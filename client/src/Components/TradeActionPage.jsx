@@ -95,7 +95,7 @@ export default function TradeActionPage() {
                   <div className="col-span-6 px-4 py-4">
                     <div className="flex items-start gap-3">
                       <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-                        <Icon size={20} variant="Bold" className="text-slate-700" />
+                        <Icon size={20} variant="Bold" color="#334155" />
                       </span>
                       <div>
                         <div className="text-sm font-semibold text-slate-900">{a.title}</div>

@@ -25,7 +25,7 @@ function ToggleRow({ icon: Icon, title, description, checked, onChange }) {
     <div className="flex items-start justify-between gap-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <div className="flex items-start gap-3">
         <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 ring-1 ring-amber-100">
-          <Icon size={20} variant="Bold" className="text-slate-700" />
+          <Icon size={20} variant="Bold" color="#334155" />
         </span>
         <div>
           <div className="text-sm font-semibold text-slate-900">{title}</div>
@@ -115,7 +115,7 @@ export default function SettingsPage() {
                   type="button"
                   className="rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 inline-flex items-center gap-2"
                 >
-                  <TickSquare size={18} variant="Bold" className="text-white" />
+                  <TickSquare size={18} variant="Bold" color="#ffffff" />
                   Save Changes
                 </button>
               </div>

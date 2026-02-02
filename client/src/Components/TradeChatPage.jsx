@@ -1,12 +1,16 @@
 import AppLayout from './layout/AppLayout.jsx'
 
+import chatAvatar from '../images/africa-logo-chat.png'
+
 function ChatBubble({ variant, children }) {
   const isUser = variant === 'user'
 
   return (
     <div className={isUser ? 'flex justify-start gap-3' : 'flex justify-end gap-3'}>
       {isUser ? (
-        <div className="h-10 w-10 shrink-0 rounded-full bg-slate-200 ring-1 ring-slate-300" />
+        <div className="h-10 w-10 shrink-0 rounded-full bg-slate-200 ring-1 ring-slate-300 flex items-center justify-center">
+          <span className="text-xs font-bold text-slate-700">U</span>
+        </div>
       ) : null}
 
       <div
@@ -21,7 +25,9 @@ function ChatBubble({ variant, children }) {
       </div>
 
       {!isUser ? (
-        <div className="h-10 w-10 shrink-0 rounded-full bg-white ring-1 ring-slate-200 shadow-sm" />
+        <div className="h-10 w-10 shrink-0 rounded-full bg-white ring-1 ring-slate-200 shadow-sm overflow-hidden">
+          <img src={chatAvatar} alt="Zuri AI" className="h-full w-full object-cover" />
+        </div>
       ) : null}
     </div>
   )

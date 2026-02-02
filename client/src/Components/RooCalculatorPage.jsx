@@ -152,7 +152,7 @@ export default function RooCalculatorPage() {
                 onChange={setValueAdded}
               />
               <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-                <InfoCircle size={16} variant="Linear" className="text-slate-500" />
+                <InfoCircle size={16} variant="Linear" color="#64748b" />
                 This is an estimate; actual rules depend on HS-specific product rules.
               </div>
             </div>
@@ -189,9 +189,9 @@ export default function RooCalculatorPage() {
           <div className="p-6 space-y-4">
             <StatusPill variant={result.status}>
               {result.status === 'pass' ? (
-                <TickCircle size={16} variant="Bold" className="text-green-700" />
+                <TickCircle size={16} variant="Bold" color="#15803d" />
               ) : (
-                <Warning2 size={16} variant="Bold" className="text-amber-800" />
+                <Warning2 size={16} variant="Bold" color="#92400e" />
               )}
               {result.headline}
             </StatusPill>

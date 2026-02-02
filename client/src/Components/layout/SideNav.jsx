@@ -1,25 +1,26 @@
 import { Link } from 'react-router-dom'
 import {
-  Category2,
-  Messages,
+  Profile2User,
+  MessageText,
   Calculator,
   Activity,
-  DocumentText,
+  Folder,
   Setting2,
 } from 'iconsax-react'
 
 const NAV_ITEMS = [
-  { key: 'dashboard', label: 'Dashboard', to: '/app/dashboard', Icon: Category2 },
-  { key: 'chat', label: 'AI Trade Chat', to: '/app/chat', Icon: Messages },
+  { key: 'dashboard', label: 'Dashboard', to: '/app/dashboard', Icon: Profile2User },
+  { key: 'chat', label: 'AI Trade Chat', to: '/app/chat', Icon: MessageText },
   { key: 'roo', label: 'RoO Calculator', to: '/app/roo', Icon: Calculator },
   { key: 'trade', label: 'Trade Action', to: '/app/trade-action', Icon: Activity },
-  { key: 'docs', label: 'My Document', to: '/app/documents', Icon: DocumentText },
+  { key: 'docs', label: 'My Document', to: '/app/documents', Icon: Folder },
   { key: 'settings', label: 'Setting', to: '/app/settings', Icon: Setting2 },
 ]
 
 function NavItem({ active, item }) {
   const isActive = active === item.key
   const Icon = item.Icon
+  const iconColor = isActive ? '#0f172a' : '#64748b'
 
   return (
     <Link
@@ -31,18 +32,7 @@ function NavItem({ active, item }) {
           : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900')
       }
     >
-      <span
-        className={
-          'inline-flex h-9 w-9 items-center justify-center rounded-xl ' +
-          (isActive ? 'bg-white shadow-sm ring-1 ring-slate-200' : 'bg-white')
-        }
-      >
-        <Icon
-          size={20}
-          variant={isActive ? 'Bold' : 'Linear'}
-          className={isActive ? 'text-slate-800' : 'text-slate-500'}
-        />
-      </span>
+      <Icon size={22} variant={isActive ? 'Bold' : 'Linear'} color={iconColor} />
       <span className="text-sm font-medium">{item.label}</span>
     </Link>
   )
@@ -50,7 +40,7 @@ function NavItem({ active, item }) {
 
 export default function SideNav({ active }) {
   return (
-    <aside className="w-[260px] shrink-0 border-r border-slate-200 bg-white">
+    <aside className="w-[260px] shrink-0 border-r border-slate-200 bg-slate-50 flex flex-col">
       <div className="px-4 py-5">
         <div className="space-y-2">
           {NAV_ITEMS.slice(0, 5).map((item) => (
