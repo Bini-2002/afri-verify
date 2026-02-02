@@ -6,6 +6,9 @@ import SignupPage from './Components/SignupPage.jsx'
 import DashboardPage from './Components/DashboardPage.jsx'
 import TradeChatPage from './Components/TradeChatPage.jsx'
 import DocumentRepositoryPage from './Components/DocumentRepositoryPage.jsx'
+import RooCalculatorPage from './Components/RooCalculatorPage.jsx'
+import TradeActionPage from './Components/TradeActionPage.jsx'
+import SettingsPage from './Components/SettingsPage.jsx'
 
 export default function App() {
   return (
@@ -18,6 +21,9 @@ export default function App() {
         <Route path="/app/dashboard" element={<DashboardPage />} />
         <Route path="/app/chat" element={<TradeChatPage />} />
         <Route path="/app/documents" element={<DocumentRepositoryPage />} />
+        <Route path="/app/roo" element={<RooCalculatorPage />} />
+        <Route path="/app/trade-action" element={<TradeActionPage />} />
+        <Route path="/app/settings" element={<SettingsPage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
