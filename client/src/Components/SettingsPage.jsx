@@ -1,6 +1,9 @@
 import { useId, useState } from 'react'
 import AppLayout from './layout/AppLayout.jsx'
 import { TickSquare, NotificationBing, SecuritySafe, User } from 'iconsax-react'
+import { useNavigate } from 'react-router-dom'
+
+import { clearToken } from '../lib/auth.js'
 
 function Field({ label, id, value, onChange, type = 'text', placeholder }) {
   return (
@@ -59,6 +62,7 @@ export default function SettingsPage() {
   const nameId = useId()
   const emailId = useId()
   const companyId = useId()
+  const navigate = useNavigate()
 
   const [name, setName] = useState('Bini')
   const [email, setEmail] = useState('binetjachew18@gmail.com')
@@ -171,6 +175,10 @@ export default function SettingsPage() {
             <button
               type="button"
               className="w-full rounded-xl bg-red-50 px-5 py-2.5 text-sm font-semibold text-red-700 shadow-sm ring-1 ring-red-200 hover:bg-red-100"
+              onClick={() => {
+                clearToken()
+                navigate('/login', { replace: true })
+              }}
             >
               Log out
             </button>
