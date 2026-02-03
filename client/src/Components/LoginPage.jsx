@@ -1,9 +1,12 @@
 import { useId, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 import logo from '../images/logo-removebg-preview.png'
 import heroSide from '../images/cyber-map.png'
 import googleIcon from '../images/google.png'
+
+import { getApiBaseUrl, setToken } from '../lib/auth.js'
 
 function EyeIcon({ open }) {
   return open ? (
@@ -52,8 +55,13 @@ function EyeIcon({ open }) {
 export default function LoginPage() {
   const emailId = useId()
   const passwordId = useId()
+  const navigate = useNavigate()
 
   const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const quote = useMemo(
     () =>
@@ -75,7 +83,39 @@ export default function LoginPage() {
             Trade Pioneer.
           </h1>
 
-          <form className="mt-10 space-y-6 max-w-md">
+          <form
+            className="mt-10 space-y-6 max-w-md"
+            onSubmit={async (e) => {
+              e.preventDefault()
+              setError('')
+              setLoading(true)
+              try {
+                const apiBase = getApiBaseUrl()
+                const body = new URLSearchParams()
+                body.set('username', email)
+                body.set('password', password)
+
+                const res = await fetch(`${apiBase}/auth/token`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                  body,
+                })
+
+                if (!res.ok) {
+                  const data = await res.json().catch(() => ({}))
+                  throw new Error(data.detail || 'Login failed')
+                }
+
+                const data = await res.json()
+                setToken(data.access_token)
+                navigate('/app/dashboard', { replace: true })
+              } catch (err) {
+                setError(err.message || 'Login failed')
+              } finally {
+                setLoading(false)
+              }
+            }}
+          >
             <div>
               <label
                 htmlFor={emailId}
@@ -90,6 +130,8 @@ export default function LoginPage() {
                 autoComplete="email"
                 className="mt-2 block w-full rounded-full border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-200"
                 placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
 
@@ -108,6 +150,8 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   className="block w-full rounded-full border border-slate-300 bg-white px-4 py-3 pr-12 text-sm text-slate-900 shadow-sm focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-200"
                   placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
                 <button
                   type="button"
@@ -120,11 +164,18 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {error ? (
+              <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-200">
+                {error}
+              </div>
+            ) : null}
+
             <button
-              type="button"
+              type="submit"
+              disabled={loading}
               className="w-full rounded-full bg-amber-300 px-6 py-3 text-sm font-semibold text-slate-900 shadow hover:bg-amber-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
             >
-              Log in
+              {loading ? 'Logging in…' : 'Log in'}
             </button>
 
             <div className="text-center">
@@ -149,6 +200,9 @@ export default function LoginPage() {
 
             <button
               type="button"
+              onClick={() => {
+                window.location.href = `${getApiBaseUrl()}/auth/google/login`
+              }}
               className="w-full rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 inline-flex items-center justify-center gap-2"
             >
               <img src={googleIcon} alt="" className="h-5 w-5" />
