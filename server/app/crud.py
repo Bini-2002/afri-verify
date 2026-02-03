@@ -11,6 +11,27 @@ def get_user_by_email(db: Session, email: str):
     return db.query(models.User).filter(models.User.email == email).first()
 
 
+def upsert_google_user(db: Session, email: str, full_name: str):
+    user = get_user_by_email(db, email=email)
+    if user:
+        if full_name and user.full_name != full_name:
+            user.full_name = full_name
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        return user
+
+    user = models.User(
+        email=email,
+        full_name=full_name or "Google User",
+        hashed_password=None,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
 def create_user(db: Session, user: schemas.UserCreate):
     hashed_password = pwd_context.hash(user.password)
     db_user = models.User(
