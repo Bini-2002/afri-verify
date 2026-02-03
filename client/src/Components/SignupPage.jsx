@@ -1,9 +1,12 @@
 import { useId, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 import logo from '../images/logo-removebg-preview.png'
 import heroSide from '../images/cyber-map.png'
 import googleIcon from '../images/google.png'
+
+import { getApiBaseUrl, setToken } from '../lib/auth.js'
 
 function EyeIcon({ open }) {
   return open ? (
@@ -54,8 +57,15 @@ export default function SignupPage() {
   const emailId = useId()
   const passwordId = useId()
   const sectorId = useId()
+  const navigate = useNavigate()
 
   const [showPassword, setShowPassword] = useState(false)
+  const [fullName, setFullName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [sector, setSector] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const quote = useMemo(
     () =>
@@ -75,7 +85,53 @@ export default function SignupPage() {
             Join the trade revolution
           </h1>
 
-          <form className="mt-8 space-y-5 max-w-md">
+          <form
+            className="mt-8 space-y-5 max-w-md"
+            onSubmit={async (e) => {
+              e.preventDefault()
+              setError('')
+              setLoading(true)
+              try {
+                const apiBase = getApiBaseUrl()
+
+                const regRes = await fetch(`${apiBase}/auth/register`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    full_name: fullName,
+                    email,
+                    password,
+                    sector,
+                  }),
+                })
+                if (!regRes.ok) {
+                  const data = await regRes.json().catch(() => ({}))
+                  throw new Error(data.detail || 'Signup failed')
+                }
+
+                const body = new URLSearchParams()
+                body.set('username', email)
+                body.set('password', password)
+                const tokenRes = await fetch(`${apiBase}/auth/token`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                  body,
+                })
+                if (!tokenRes.ok) {
+                  const data = await tokenRes.json().catch(() => ({}))
+                  throw new Error(data.detail || 'Login after signup failed')
+                }
+
+                const tokenData = await tokenRes.json()
+                setToken(tokenData.access_token)
+                navigate('/app/dashboard', { replace: true })
+              } catch (err) {
+                setError(err.message || 'Signup failed')
+              } finally {
+                setLoading(false)
+              }
+            }}
+          >
             <div>
               <label
                 htmlFor={nameId}
@@ -90,6 +146,8 @@ export default function SignupPage() {
                 autoComplete="name"
                 className="mt-2 block w-full rounded-full border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-200"
                 placeholder="Your name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
               />
             </div>
 
@@ -107,6 +165,8 @@ export default function SignupPage() {
                 autoComplete="email"
                 className="mt-2 block w-full rounded-full border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-200"
                 placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
 
@@ -125,6 +185,8 @@ export default function SignupPage() {
                   autoComplete="new-password"
                   className="block w-full rounded-full border border-slate-300 bg-white px-4 py-3 pr-12 text-sm text-slate-900 shadow-sm focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-200"
                   placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
                 <button
                   type="button"
@@ -150,14 +212,23 @@ export default function SignupPage() {
                 type="text"
                 className="mt-2 block w-full rounded-full border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-200"
                 placeholder="e.g Agriculture, Textile"
+                value={sector}
+                onChange={(e) => setSector(e.target.value)}
               />
             </div>
 
+            {error ? (
+              <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-200">
+                {error}
+              </div>
+            ) : null}
+
             <button
-              type="button"
+              type="submit"
+              disabled={loading}
               className="w-full rounded-full bg-amber-300 px-6 py-3 text-sm font-semibold text-slate-900 shadow hover:bg-amber-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
             >
-              Create Account
+              {loading ? 'Creating…' : 'Create Account'}
             </button>
 
             <div className="relative">
@@ -173,6 +244,9 @@ export default function SignupPage() {
 
             <button
               type="button"
+              onClick={() => {
+                window.location.href = `${getApiBaseUrl()}/auth/google/login`
+              }}
               className="w-full rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 inline-flex items-center justify-center gap-2"
             >
               <img src={googleIcon} alt="" className="h-5 w-5" />
