@@ -19,4 +19,9 @@ def update_me(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    return crud.update_user_profile(db=db, user_id=current_user.id, payload=payload)
+    updated = crud.update_user_profile(db=db, user_id=current_user.id, payload=payload)
+    if not updated:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=404, detail="User not found")
+    return updated
