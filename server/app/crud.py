@@ -19,11 +19,28 @@ def create_user(db: Session, user: schemas.UserCreate):
         hashed_password=hashed_password,
         business_name=user.business_name,
         sector=user.sector,
+        home_country=user.home_country,
+        target_market=user.target_market,
     )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
     return db_user
+
+
+def update_user_profile(db: Session, user_id: str, payload: schemas.UserUpdate):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        return None
+
+    data = payload.model_dump(exclude_unset=True)
+    for field, value in data.items():
+        setattr(user, field, value)
+
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
 
 
 def create_assessment(db: Session, assessment: schemas.AssessmentCreate, user_id: str):

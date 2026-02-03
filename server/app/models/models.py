@@ -22,11 +22,12 @@ class User(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     full_name = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, index=True, nullable=False)
-    hashed_password = Column(String(255), nullable=False)
+    hashed_password = Column(String(255), nullable=True)
     business_name = Column(String(255))
     sector = Column(String(255))
     registration_number = Column(String(100))
     home_country = Column(String(100))
+    target_market = Column(String(100))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     assessments = relationship("ComplianceAssessment", back_populates="owner")

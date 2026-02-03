@@ -8,6 +8,8 @@ class UserBase(BaseModel):
     full_name: str
     business_name: Optional[str] = None
     sector: Optional[str] = None
+    home_country: Optional[str] = None
+    target_market: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
@@ -16,6 +18,15 @@ class UserResponse(UserBase):
     id: str
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
+
+
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    business_name: Optional[str] = None
+    sector: Optional[str] = None
+    registration_number: Optional[str] = None
+    home_country: Optional[str] = None
+    target_market: Optional[str] = None
 
 # --- TOKEN ---
 class Token(BaseModel):
