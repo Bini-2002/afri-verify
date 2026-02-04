@@ -108,6 +108,7 @@ export default function TradeActionPage() {
 
   const [assessment, setAssessment] = useState(null)
   const [profile, setProfile] = useState(null)
+  const [documents, setDocuments] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -141,7 +142,7 @@ export default function TradeActionPage() {
       setLoading(true)
       setError('')
       try {
-        const [me, chosenAssessment] = await Promise.all([
+        const [me, chosenAssessment, docs] = await Promise.all([
           apiFetch('/users/me'),
           (async () => {
             if (assessmentIdFromUrl) {
@@ -155,11 +156,13 @@ export default function TradeActionPage() {
             }
             return newest
           })(),
+          apiFetch('/documents/'),
         ])
 
         if (cancelled) return
         setProfile(me)
         setAssessment(chosenAssessment)
+        setDocuments(Array.isArray(docs) ? docs : [])
       } catch (e) {
         if (cancelled) return
         setError(e?.message || 'Failed to load compliance tracker')
@@ -187,12 +190,39 @@ export default function TradeActionPage() {
       await apiFetch('/documents/upload', { method: 'POST', body: form })
       const refreshed = await apiFetch(`/assessments/${encodeURIComponent(assessment.id)}`)
       setAssessment(refreshed)
+
+      const docs = await apiFetch('/documents/')
+      setDocuments(Array.isArray(docs) ? docs : [])
     } catch (e) {
       setError(e?.message || 'Upload failed')
     } finally {
       setUploading((prev) => ({ ...prev, [docType]: false }))
     }
   }
+
+  function safeParseJson(value) {
+    if (!value || typeof value !== 'string') return null
+    try {
+      return JSON.parse(value)
+    } catch {
+      return null
+    }
+  }
+
+  const latestInvoice = useMemo(() => {
+    if (!assessment?.id) return null
+    const inv = documents
+      .filter((d) => String(d?.assessment_id || '') === String(assessment.id))
+      .filter((d) => {
+        const t = String(d?.doc_type || '').toLowerCase()
+        return t === 'invoice' || t === 'commercial_invoice' || t === 'commercial invoice'
+      })
+      .sort((a, b) => new Date(b.uploaded_at) - new Date(a.uploaded_at))
+    return inv[0] || null
+  }, [documents, assessment])
+
+  const invoiceMetadata = useMemo(() => safeParseJson(latestInvoice?.ai_metadata), [latestInvoice])
+  const invoiceFields = invoiceMetadata?.extracted_fields || null
 
   function openFilePicker(docType) {
     const ref = fileInputs[docType]
@@ -272,6 +302,63 @@ export default function TradeActionPage() {
                   : 'No assessment selected'}
             </div>
           </div>
+        </section>
+
+        {/* Invoice extraction */}
+        <section className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-lg font-semibold text-slate-900">Invoice extraction</div>
+              <div className="mt-1 text-xs font-semibold text-slate-600">
+                {latestInvoice ? `Latest: ${latestInvoice.file_name}` : 'Upload an invoice to extract fields'}
+              </div>
+            </div>
+          </div>
+
+          {latestInvoice ? (
+            <div className="mt-4 space-y-3">
+              <div className="text-xs font-semibold text-slate-700">
+                Status: <span className="text-slate-900">{latestInvoice.status || '—'}</span>
+                {invoiceMetadata?.ocr_provider ? (
+                  <span className="ml-2 text-slate-600">(Provider: {invoiceMetadata.ocr_provider})</span>
+                ) : null}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
+                  <div className="text-xs font-semibold text-slate-600">Item</div>
+                  <div className="mt-1 text-sm font-semibold text-slate-900 break-words">
+                    {invoiceFields?.item_name || '—'}
+                  </div>
+                </div>
+                <div className="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
+                  <div className="text-xs font-semibold text-slate-600">Price</div>
+                  <div className="mt-1 text-sm font-semibold text-slate-900">
+                    {typeof invoiceFields?.price === 'number' ? invoiceFields.price : '—'}
+                  </div>
+                </div>
+                <div className="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
+                  <div className="text-xs font-semibold text-slate-600">Country</div>
+                  <div className="mt-1 text-sm font-semibold text-slate-900 break-words">
+                    {invoiceFields?.country || '—'}
+                  </div>
+                </div>
+              </div>
+
+              {invoiceMetadata?.extracted_text_excerpt ? (
+                <div>
+                  <div className="text-xs font-semibold text-slate-700">Extracted text (excerpt)</div>
+                  <pre className="mt-2 max-h-48 overflow-auto rounded-xl bg-slate-50 p-3 text-xs text-slate-800 ring-1 ring-slate-200 whitespace-pre-wrap">
+                    {invoiceMetadata.extracted_text_excerpt}
+                  </pre>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <div className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-slate-700 ring-1 ring-amber-200">
+              Upload an invoice (image or PDF). If it’s an image, make sure Tesseract is installed on the server.
+            </div>
+          )}
         </section>
 
         {/* Compliance Timeline */}
