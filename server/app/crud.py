@@ -207,3 +207,41 @@ def create_document(
 
 def get_documents(db: Session, user_id: str):
     return db.query(models.Document).filter(models.Document.user_id == user_id).all()
+
+
+def replace_knowledge_chunks_for_document(
+    db: Session,
+    *,
+    user_id: str,
+    document_id: str,
+    chunks,
+):
+    db.query(models.KnowledgeChunk).filter(
+        models.KnowledgeChunk.user_id == user_id,
+        models.KnowledgeChunk.document_id == document_id,
+    ).delete(synchronize_session=False)
+
+    for page_number, chunk_index, content in chunks:
+        db.add(
+            models.KnowledgeChunk(
+                user_id=user_id,
+                document_id=document_id,
+                page_number=page_number,
+                chunk_index=chunk_index,
+                content=content,
+            )
+        )
+    db.commit()
+
+
+def get_afcfta_knowledge_chunks_for_user(db: Session, *, user_id: str):
+    from sqlalchemy import func
+
+    return (
+        db.query(models.KnowledgeChunk, models.Document)
+        .join(models.Document, models.Document.id == models.KnowledgeChunk.document_id)
+        .filter(models.KnowledgeChunk.user_id == user_id)
+        .filter(models.Document.user_id == user_id)
+        .filter(func.lower(models.Document.doc_type) == "afcfta_pdf")
+        .all()
+    )

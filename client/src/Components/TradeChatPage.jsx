@@ -2,6 +2,9 @@ import AppLayout from './layout/AppLayout.jsx'
 
 import chatAvatar from '../images/africa-logo-chat.png'
 
+import { useState } from 'react'
+import { apiFetch } from '../lib/auth.js'
+
 function ChatBubble({ variant, children }) {
   const isUser = variant === 'user'
 
@@ -34,21 +37,65 @@ function ChatBubble({ variant, children }) {
 }
 
 export default function TradeChatPage() {
+  const [messages, setMessages] = useState([
+    {
+      role: 'ai',
+      text: "Ask me anything about AfCFTA rules of origin. I'll answer using only your uploaded AfCFTA PDFs.",
+      citations: [],
+    },
+  ])
+  const [input, setInput] = useState('')
+  const [sending, setSending] = useState(false)
+
+  async function send() {
+    const text = input.trim()
+    if (!text || sending) return
+
+    setInput('')
+    setMessages((prev) => [...prev, { role: 'user', text }])
+    setSending(true)
+
+    try {
+      const res = await apiFetch('/rag/chat', {
+        method: 'POST',
+        body: JSON.stringify({ message: text }),
+      })
+      setMessages((prev) => [
+        ...prev,
+        { role: 'ai', text: res?.answer || 'No response', citations: res?.citations || [] },
+      ])
+    } catch (e) {
+      setMessages((prev) => [
+        ...prev,
+        { role: 'ai', text: e?.message || 'Chat failed', citations: [] },
+      ])
+    } finally {
+      setSending(false)
+    }
+  }
+
   return (
     <AppLayout active="chat" title="AI Trade Chat with Zuri AI">
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="p-6">
           <div className="space-y-6">
-            <ChatBubble variant="user">
-              What are the rules of origin for exporting Coffee from Ethiopia to
-              Kenya?
-            </ChatBubble>
-
-            <ChatBubble variant="ai">
-              According to AfCFTA Annex 2, Coffee (HS Code 0901) must be wholly
-              obtained in the member state. This means it must be grown and
-              harvested in Ethiopia to qualify for 0% tariff.
-            </ChatBubble>
+            {messages.map((m, idx) => (
+              <ChatBubble key={idx} variant={m.role === 'user' ? 'user' : 'ai'}>
+                <div>{m.text}</div>
+                {m.role !== 'user' && Array.isArray(m.citations) && m.citations.length > 0 ? (
+                  <div className="mt-3 border-t border-slate-200/60 pt-3 text-xs text-slate-700">
+                    <div className="font-semibold text-slate-800">Citations</div>
+                    <ul className="mt-2 space-y-1">
+                      {m.citations.slice(0, 6).map((c) => (
+                        <li key={c.chunk_id} className="truncate">
+                          {c.file_name} {c.page_number ? `(p.${c.page_number})` : ''}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </ChatBubble>
+            ))}
           </div>
         </div>
 
@@ -57,13 +104,20 @@ export default function TradeChatPage() {
             <input
               type="text"
               placeholder=""
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') send()
+              }}
               className="h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 shadow-sm focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-200"
             />
             <button
               type="button"
+              onClick={send}
+              disabled={sending}
               className="h-12 rounded-xl bg-slate-900 px-6 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
             >
-              Send
+              {sending ? 'Sending…' : 'Send'}
             </button>
           </div>
         </div>

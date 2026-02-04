@@ -78,3 +78,16 @@ class DocumentResponse(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
+
+
+class RagCitation(BaseModel):
+    document_id: str
+    file_name: str
+    page_number: Optional[int] = None
+    chunk_id: str
+    snippet: str
+
+
+class RagChatResponse(BaseModel):
+    answer: str
+    citations: List[RagCitation] = []

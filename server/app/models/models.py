@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Float, Boolean, DateTime, ForeignKey, Enum, Text
+from sqlalchemy import Column, String, Float, Boolean, DateTime, ForeignKey, Enum, Text, Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 import uuid
@@ -80,3 +80,16 @@ class Document(Base):
 
     owner = relationship("User", back_populates="documents")
     assessment = relationship("ComplianceAssessment", back_populates="documents")
+
+
+class KnowledgeChunk(Base):
+    __tablename__ = "knowledge_chunks"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    document_id = Column(String(36), ForeignKey("documents.id"), nullable=False, index=True)
+
+    page_number = Column(Integer, nullable=True)
+    chunk_index = Column(Integer, nullable=False)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)

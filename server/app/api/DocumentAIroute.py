@@ -9,6 +9,8 @@ from sqlalchemy.orm import Session
 
 import google.generativeai as genai
 
+from pypdf import PdfReader
+
 from .. import crud, database, models, schemas
 from .auth import get_current_user
 
@@ -34,6 +36,8 @@ async def upload_document(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(get_current_user),
 ):
+    doc_type_norm = (doc_type or "").strip().lower()
+
     # 1. Save File Locally
     file_path = os.path.join(UPLOAD_DIR, file.filename)
     with open(file_path, "wb") as buffer:
@@ -44,15 +48,40 @@ async def upload_document(
         db,
         file_name=file.filename,
         file_path=file_path,
-        doc_type=doc_type,
+        doc_type=doc_type_norm,
         user_id=current_user.id,
         assessment_id=assessment_id,
     )
 
+    # 2b. If this is an AfCFTA PDF, ingest it for RAG
+    if doc_type_norm == "afcfta_pdf" and file.filename.lower().endswith(".pdf"):
+        try:
+            from ..services.rag import chunk_text
+
+            reader = PdfReader(file_path)
+            rows = []
+            chunk_index = 0
+            for i, page in enumerate(reader.pages):
+                text = page.extract_text() or ""
+                text = " ".join(text.split())
+                for chunk in chunk_text(text):
+                    rows.append((i + 1, chunk_index, chunk))
+                    chunk_index += 1
+
+            crud.replace_knowledge_chunks_for_document(
+                db,
+                user_id=current_user.id,
+                document_id=db_doc.id,
+                chunks=rows,
+            )
+        except Exception as e:
+            # Keep upload flow working even if ingestion fails
+            print(f"AfCFTA PDF ingestion failed: {e}")
+
     # 3. Trigger Zuri AI Verification (Simplified for Prototype)
     # In production, this should be a background task (Celery/Redis)
     try:
-        prompt = f"Analyze this {doc_type}. Does it look like a valid trade document? Return YES or NO."
+        prompt = f"Analyze this {doc_type_norm}. Does it look like a valid trade document? Return YES or NO."
         _ = prompt  # placeholder to keep flow; file content upload not implemented
 
         # Simulating AI success for now to ensure flow works
@@ -65,7 +94,7 @@ async def upload_document(
             crud.apply_document_to_assessment_tracker(
                 db=db,
                 assessment=assessment,
-                doc_type=doc_type,
+                doc_type=doc_type_norm,
                 doc_status=db_doc.status,
             )
     except Exception as e:
