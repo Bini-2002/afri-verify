@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import AppLayout from './layout/AppLayout.jsx'
 import { AddSquare, SearchNormal1 } from 'iconsax-react'
 
-import { apiFetch } from '../lib/auth.js'
+import { apiFetch, getApiBaseUrl, getToken } from '../lib/auth.js'
 
 function SelectLike({ label }) {
   return (
@@ -96,6 +96,71 @@ export default function DocumentRepositoryPage() {
   const [uploadDocType, setUploadDocType] = useState('invoice')
   const [uploadAssessmentId, setUploadAssessmentId] = useState('')
   const [uploadFile, setUploadFile] = useState(null)
+
+  async function fetchDocumentBlob(doc) {
+    const token = getToken()
+    if (!token) throw new Error('Not authenticated')
+
+    const apiBase = getApiBaseUrl()
+    const res = await fetch(`${apiBase}/documents/${doc.id}/download`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    if (!res.ok) {
+      let detail = `Download failed (${res.status})`
+      try {
+        const data = await res.json()
+        detail = data.detail || JSON.stringify(data)
+      } catch {
+        try {
+          detail = await res.text()
+        } catch {
+          // ignore
+        }
+      }
+      throw new Error(detail)
+    }
+
+    const contentType = res.headers.get('content-type') || 'application/octet-stream'
+    const blob = await res.blob()
+    return { blob, contentType }
+  }
+
+  async function handleDownload(doc) {
+    setError('')
+    try {
+      const { blob } = await fetchDocumentBlob(doc)
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = doc.file_name || 'document'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (e) {
+      setError(e?.message || 'Download failed')
+    }
+  }
+
+  async function handleView(doc) {
+    setError('')
+    try {
+      const { blob, contentType } = await fetchDocumentBlob(doc)
+      if (!contentType.includes('pdf') && !contentType.startsWith('image/')) {
+        await handleDownload(doc)
+        return
+      }
+
+      const url = window.URL.createObjectURL(blob)
+      window.open(url, '_blank', 'noopener,noreferrer')
+      setTimeout(() => window.URL.revokeObjectURL(url), 60_000)
+    } catch (e) {
+      setError(e?.message || 'View failed')
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -337,7 +402,7 @@ export default function DocumentRepositoryPage() {
 
         <div className="px-6 pb-6">
           <div className="overflow-hidden rounded-xl border border-slate-200">
-            <div className="grid grid-cols-6 bg-amber-50 text-xs font-semibold text-slate-700">
+            <div className="grid grid-cols-7 bg-amber-50 text-xs font-semibold text-slate-700">
               {[
                 'Document Name',
                 'Linked Shipment',
@@ -345,6 +410,7 @@ export default function DocumentRepositoryPage() {
                 'Date Uploaded',
                 'Status',
                 'Compliance\nStatus',
+                'Actions',
               ].map((h) => (
                 <div key={h} className="px-3 py-3 border-r border-slate-200 last:border-r-0">
                   {h}
@@ -372,7 +438,7 @@ export default function DocumentRepositoryPage() {
 
                     const compliance = a?.status ? String(a.status).toLowerCase() : ''
                     return (
-                      <div key={d.id} className="grid grid-cols-6 items-center text-sm text-slate-800">
+                      <div key={d.id} className="grid grid-cols-7 items-center text-sm text-slate-800">
                         <div className="px-3 py-3 border-r border-slate-200 font-semibold text-slate-900 truncate">
                           {d.file_name}
                         </div>
@@ -382,8 +448,26 @@ export default function DocumentRepositoryPage() {
                         <div className="px-3 py-3 border-r border-slate-200">
                           <Badge kind={status}>{status || 'pending'}</Badge>
                         </div>
-                        <div className="px-3 py-3">
+                        <div className="px-3 py-3 border-r border-slate-200">
                           {compliance ? <Badge kind={compliance}>{compliance}</Badge> : '—'}
+                        </div>
+                        <div className="px-3 py-3">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleView(d)}
+                              className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50"
+                            >
+                              View
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDownload(d)}
+                              className="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-slate-800"
+                            >
+                              Download
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )

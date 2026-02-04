@@ -1,5 +1,6 @@
 import os
 import shutil
+import mimetypes
 from typing import List
 
 from fastapi import APIRouter, Depends, File, Form, UploadFile
@@ -102,7 +103,7 @@ def download_document(
     return FileResponse(
         path=doc.file_path,
         filename=doc.file_name,
-        media_type="application/octet-stream",
+        media_type=mimetypes.guess_type(doc.file_name or "")[0] or "application/octet-stream",
     )
 
 
