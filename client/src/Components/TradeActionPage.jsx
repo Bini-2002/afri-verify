@@ -282,88 +282,32 @@ export default function TradeActionPage() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 xl:grid-cols-[340px,1fr] 2xl:grid-cols-[340px,1fr,300px] gap-6 items-start">
-        {/* Shipment Summary */}
-        <section className="relative rounded-2xl bg-sky-200/60 shadow-sm ring-1 ring-slate-200 px-6 pb-6 pt-14">
-          <PillTitle>Shipment Summary</PillTitle>
+      <div className="grid grid-cols-1 2xl:grid-cols-[1fr,320px] gap-6 items-start">
+        <div className="flex flex-col xl:flex-row gap-6 items-start">
+          {/* Shipment Summary */}
+          <section className="relative w-full xl:w-[340px] rounded-2xl bg-sky-200/60 shadow-sm ring-1 ring-slate-200 px-6 pb-6 pt-14">
+            <PillTitle>Shipment Summary</PillTitle>
 
-          <div className="mt-2 space-y-3">
-            <LabelRow label="Product" value={summary?.product || (loading ? 'Loading…' : '—')} />
-            <LabelRow label="Route" value={summary?.route || (loading ? 'Loading…' : '—')} />
-            <LabelRow label="Protocol" value={summary?.protocol || (loading ? 'Loading…' : '—')} />
-          </div>
-
-          <div className="mt-6 flex justify-center">
-            <div className="rounded-full bg-green-300 px-6 py-2 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-green-400/50">
-              {summary
-                ? `${summary.status.toUpperCase()} (VA=${summary.va}%)`
-                : loading
-                  ? 'Loading…'
-                  : 'No assessment selected'}
+            <div className="mt-2 space-y-3">
+              <LabelRow label="Product" value={summary?.product || (loading ? 'Loading…' : '—')} />
+              <LabelRow label="Route" value={summary?.route || (loading ? 'Loading…' : '—')} />
+              <LabelRow label="Protocol" value={summary?.protocol || (loading ? 'Loading…' : '—')} />
             </div>
-          </div>
-        </section>
 
-        {/* Invoice extraction */}
-        <section className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-lg font-semibold text-slate-900">Invoice extraction</div>
-              <div className="mt-1 text-xs font-semibold text-slate-600">
-                {latestInvoice ? `Latest: ${latestInvoice.file_name}` : 'Upload an invoice to extract fields'}
+            <div className="mt-6 flex justify-center">
+              <div className="rounded-full bg-green-300 px-6 py-2 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-green-400/50">
+                {summary
+                  ? `${summary.status.toUpperCase()} (VA=${summary.va}%)`
+                  : loading
+                    ? 'Loading…'
+                    : 'No assessment selected'}
               </div>
             </div>
-          </div>
+          </section>
 
-          {latestInvoice ? (
-            <div className="mt-4 space-y-3">
-              <div className="text-xs font-semibold text-slate-700">
-                Status: <span className="text-slate-900">{latestInvoice.status || '—'}</span>
-                {invoiceMetadata?.ocr_provider ? (
-                  <span className="ml-2 text-slate-600">(Provider: {invoiceMetadata.ocr_provider})</span>
-                ) : null}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
-                  <div className="text-xs font-semibold text-slate-600">Item</div>
-                  <div className="mt-1 text-sm font-semibold text-slate-900 break-words">
-                    {invoiceFields?.item_name || '—'}
-                  </div>
-                </div>
-                <div className="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
-                  <div className="text-xs font-semibold text-slate-600">Price</div>
-                  <div className="mt-1 text-sm font-semibold text-slate-900">
-                    {typeof invoiceFields?.price === 'number' ? invoiceFields.price : '—'}
-                  </div>
-                </div>
-                <div className="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
-                  <div className="text-xs font-semibold text-slate-600">Country</div>
-                  <div className="mt-1 text-sm font-semibold text-slate-900 break-words">
-                    {invoiceFields?.country || '—'}
-                  </div>
-                </div>
-              </div>
-
-              {invoiceMetadata?.extracted_text_excerpt ? (
-                <div>
-                  <div className="text-xs font-semibold text-slate-700">Extracted text (excerpt)</div>
-                  <pre className="mt-2 max-h-48 overflow-auto rounded-xl bg-slate-50 p-3 text-xs text-slate-800 ring-1 ring-slate-200 whitespace-pre-wrap">
-                    {invoiceMetadata.extracted_text_excerpt}
-                  </pre>
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <div className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-slate-700 ring-1 ring-amber-200">
-              Upload an invoice (image or PDF). If it’s an image, make sure Tesseract is installed on the server.
-            </div>
-          )}
-        </section>
-
-        {/* Compliance Timeline */}
-        <section className="relative min-w-0 rounded-2xl bg-sky-200/60 shadow-sm ring-1 ring-slate-200 px-8 pb-8 pt-14">
-          <PillTitle>Compliance Timeline</PillTitle>
+          {/* Compliance Timeline */}
+          <section className="relative w-full xl:flex-1 min-w-0 rounded-2xl bg-sky-200/60 shadow-sm ring-1 ring-slate-200 px-8 pb-8 pt-14">
+            <PillTitle>Compliance Timeline</PillTitle>
 
           <div className="relative mt-4">
             {/* Vertical line */}
@@ -441,10 +385,87 @@ export default function TradeActionPage() {
               </div>
             </div>
           </div>
-        </section>
+
+          </section>
+
+          {/* Upload / Invoice extraction */}
+          <section className="w-full xl:w-[360px] rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 px-6 py-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-lg font-semibold text-slate-900">Upload Invoice Extraction</div>
+                <div className="mt-1 text-xs font-semibold text-slate-600">
+                  {latestInvoice ? `Latest: ${latestInvoice.file_name}` : 'Upload an invoice to extract fields'}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => openFilePicker('invoice')}
+                disabled={uploading.invoice}
+                className={
+                  'inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm ring-1 ' +
+                  (uploading.invoice
+                    ? 'bg-slate-100 text-slate-500 ring-slate-200'
+                    : 'bg-amber-100 text-slate-900 ring-amber-200 hover:bg-amber-200')
+                }
+              >
+                <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-white ring-1 ring-amber-200">
+                  <Paperclip size={12} variant="Linear" color="#0f172a" />
+                </span>
+                {uploading.invoice ? 'Uploading…' : 'Upload'}
+              </button>
+            </div>
+
+            {latestInvoice ? (
+              <div className="mt-4 space-y-3">
+                <div className="text-xs font-semibold text-slate-700">
+                  Status: <span className="text-slate-900">{latestInvoice.status || '—'}</span>
+                  {invoiceMetadata?.ocr_provider ? (
+                    <span className="ml-2 text-slate-600">(Provider: {invoiceMetadata.ocr_provider})</span>
+                  ) : null}
+                </div>
+
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
+                    <div className="text-xs font-semibold text-slate-600">Item</div>
+                    <div className="mt-1 text-sm font-semibold text-slate-900 break-words">
+                      {invoiceFields?.item_name || '—'}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
+                      <div className="text-xs font-semibold text-slate-600">Price</div>
+                      <div className="mt-1 text-sm font-semibold text-slate-900">
+                        {typeof invoiceFields?.price === 'number' ? invoiceFields.price : '—'}
+                      </div>
+                    </div>
+                    <div className="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
+                      <div className="text-xs font-semibold text-slate-600">Country</div>
+                      <div className="mt-1 text-sm font-semibold text-slate-900 break-words">
+                        {invoiceFields?.country || '—'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {invoiceMetadata?.extracted_text_excerpt ? (
+                  <div>
+                    <div className="text-xs font-semibold text-slate-700">Extracted text (excerpt)</div>
+                    <pre className="mt-2 max-h-48 overflow-auto rounded-xl bg-slate-50 p-3 text-xs text-slate-800 ring-1 ring-slate-200 whitespace-pre-wrap">
+                      {invoiceMetadata.extracted_text_excerpt}
+                    </pre>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <div className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-slate-700 ring-1 ring-amber-200">
+                Upload an invoice (image or PDF). If it’s an image, make sure Tesseract is installed on the server.
+              </div>
+            )}
+          </section>
+        </div>
 
         {/* Ask Zuri */}
-        <section className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 overflow-hidden xl:col-span-2 2xl:col-span-1 2xl:col-start-3 2xl:row-start-1">
+        <section className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 overflow-hidden 2xl:col-start-2">
           <div className="bg-amber-100 px-4 py-3 flex items-center justify-between">
             <div className="text-sm font-semibold text-slate-900">Ask Zuri</div>
             <button type="button" aria-label="More" className="text-slate-700 hover:text-slate-900">
