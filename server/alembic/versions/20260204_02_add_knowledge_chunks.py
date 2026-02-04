@@ -19,24 +19,36 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.create_table(
-        "knowledge_chunks",
-        sa.Column("id", sa.String(length=36), primary_key=True),
-        sa.Column("user_id", sa.String(length=36), sa.ForeignKey("users.id"), nullable=False),
-        sa.Column(
-            "document_id",
-            sa.String(length=36),
-            sa.ForeignKey("documents.id"),
-            nullable=False,
-        ),
-        sa.Column("page_number", sa.Integer(), nullable=True),
-        sa.Column("chunk_index", sa.Integer(), nullable=False),
-        sa.Column("content", sa.Text(), nullable=False),
-        sa.Column("created_at", sa.DateTime(), nullable=True),
-    )
+    bind = op.get_bind()
+    insp = sa.inspect(bind)
+    if "knowledge_chunks" not in insp.get_table_names():
+        op.create_table(
+            "knowledge_chunks",
+            sa.Column("id", sa.String(length=36), primary_key=True),
+            sa.Column("user_id", sa.String(length=36), sa.ForeignKey("users.id"), nullable=False),
+            sa.Column(
+                "document_id",
+                sa.String(length=36),
+                sa.ForeignKey("documents.id"),
+                nullable=False,
+            ),
+            sa.Column("page_number", sa.Integer(), nullable=True),
+            sa.Column("chunk_index", sa.Integer(), nullable=False),
+            sa.Column("content", sa.Text(), nullable=False),
+            sa.Column("created_at", sa.DateTime(), nullable=True),
+        )
 
-    op.create_index("ix_knowledge_chunks_user_id", "knowledge_chunks", ["user_id"])
-    op.create_index("ix_knowledge_chunks_document_id", "knowledge_chunks", ["document_id"])
+    # Ensure indexes exist (idempotent)
+    if bind.dialect.name == "sqlite":
+        op.execute(
+            "CREATE INDEX IF NOT EXISTS ix_knowledge_chunks_user_id ON knowledge_chunks (user_id)"
+        )
+        op.execute(
+            "CREATE INDEX IF NOT EXISTS ix_knowledge_chunks_document_id ON knowledge_chunks (document_id)"
+        )
+    else:
+        op.create_index("ix_knowledge_chunks_user_id", "knowledge_chunks", ["user_id"])
+        op.create_index("ix_knowledge_chunks_document_id", "knowledge_chunks", ["document_id"])
 
 
 def downgrade() -> None:
