@@ -5,7 +5,9 @@ from fastapi import HTTPException
 from . import models, schemas
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# NOTE: chromadb requires bcrypt>=4, but passlib 1.7.4 isn't compatible with bcrypt>=4.
+# For the demo, we use PBKDF2-SHA256 to avoid bcrypt backend issues.
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 
 def get_user_by_email(db: Session, email: str):
