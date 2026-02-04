@@ -91,3 +91,15 @@ class RagCitation(BaseModel):
 class RagChatResponse(BaseModel):
     answer: str
     citations: List[RagCitation] = []
+
+
+class OcrExtractionFields(BaseModel):
+    item_name: Optional[str] = None
+    price: Optional[float] = None
+    country: Optional[str] = None
+
+
+class OcrResponse(BaseModel):
+    document_id: str
+    extracted_text: str
+    fields: OcrExtractionFields
