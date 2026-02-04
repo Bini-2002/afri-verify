@@ -88,6 +88,10 @@ export default function DocumentRepositoryPage() {
   const [documents, setDocuments] = useState([])
   const [assessments, setAssessments] = useState([])
 
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [detailsDoc, setDetailsDoc] = useState(null)
+  const [ocrBusy, setOcrBusy] = useState(false)
+
   const [filterType, setFilterType] = useState('all')
   const [search, setSearch] = useState('')
 
@@ -234,6 +238,42 @@ export default function DocumentRepositoryPage() {
     setDocuments(sortedDocs)
   }
 
+  function safeParseJson(value) {
+    if (!value) return null
+    if (typeof value !== 'string') return null
+    try {
+      return JSON.parse(value)
+    } catch {
+      return null
+    }
+  }
+
+  const detailsMetadata = useMemo(() => safeParseJson(detailsDoc?.ai_metadata), [detailsDoc])
+  const detailsFields = detailsMetadata?.extracted_fields || null
+  const detailsDocType = String(detailsDoc?.doc_type || '').toLowerCase()
+  const detailsIsInvoice =
+    detailsDocType === 'invoice' || detailsDocType === 'commercial_invoice' || detailsDocType === 'commercial invoice'
+
+  async function runOcrForDetailsDoc() {
+    if (!detailsDoc?.id) return
+    setError('')
+    setOcrBusy(true)
+    try {
+      await apiFetch(`/documents/${encodeURIComponent(detailsDoc.id)}/ocr`, { method: 'POST' })
+      await refreshDocuments()
+
+      // refresh the modal doc from updated list
+      setDetailsDoc((prev) => {
+        const updated = documents.find((d) => d.id === prev?.id)
+        return updated || prev
+      })
+    } catch (e) {
+      setError(e?.message || 'OCR failed')
+    } finally {
+      setOcrBusy(false)
+    }
+  }
+
   async function submitUpload() {
     setError('')
     if (!uploadFile) {
@@ -266,6 +306,99 @@ export default function DocumentRepositoryPage() {
 
   return (
     <AppLayout active="docs" title="Document Repository">
+      <Modal
+        open={detailsOpen}
+        title="Document Details"
+        onClose={() => (ocrBusy ? null : (setDetailsOpen(false), setDetailsDoc(null)))}
+      >
+        {!detailsDoc ? (
+          <div className="text-sm font-semibold text-slate-700">No document selected.</div>
+        ) : (
+          <div className="space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <div className="text-xs font-semibold text-slate-600">File</div>
+                <div className="mt-1 text-sm font-semibold text-slate-900 break-words">{detailsDoc.file_name}</div>
+              </div>
+              <div>
+                <div className="text-xs font-semibold text-slate-600">Type</div>
+                <div className="mt-1 text-sm font-semibold text-slate-900">{detailsDoc.doc_type || '—'}</div>
+              </div>
+              <div>
+                <div className="text-xs font-semibold text-slate-600">Status</div>
+                <div className="mt-1 text-sm font-semibold text-slate-900">{detailsDoc.status || '—'}</div>
+              </div>
+              <div>
+                <div className="text-xs font-semibold text-slate-600">Uploaded</div>
+                <div className="mt-1 text-sm font-semibold text-slate-900">{formatDate(detailsDoc.uploaded_at)}</div>
+              </div>
+            </div>
+
+            {detailsIsInvoice ? (
+              <div className="rounded-xl bg-amber-50 px-4 py-3 ring-1 ring-amber-200">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold text-slate-900">Invoice extraction</div>
+                    <div className="mt-1 text-xs font-semibold text-slate-700">
+                      {detailsMetadata?.ocr_provider
+                        ? `Provider: ${detailsMetadata.ocr_provider}`
+                        : 'Provider: —'}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={runOcrForDetailsDoc}
+                    disabled={ocrBusy}
+                    className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 disabled:opacity-60"
+                  >
+                    {ocrBusy ? 'Running OCR…' : 'Run OCR'}
+                  </button>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="rounded-xl bg-white px-3 py-3 shadow-sm ring-1 ring-slate-200">
+                    <div className="text-xs font-semibold text-slate-600">Item</div>
+                    <div className="mt-1 text-sm font-semibold text-slate-900 break-words">
+                      {detailsFields?.item_name || '—'}
+                    </div>
+                  </div>
+                  <div className="rounded-xl bg-white px-3 py-3 shadow-sm ring-1 ring-slate-200">
+                    <div className="text-xs font-semibold text-slate-600">Price</div>
+                    <div className="mt-1 text-sm font-semibold text-slate-900">
+                      {typeof detailsFields?.price === 'number' ? detailsFields.price : '—'}
+                    </div>
+                  </div>
+                  <div className="rounded-xl bg-white px-3 py-3 shadow-sm ring-1 ring-slate-200">
+                    <div className="text-xs font-semibold text-slate-600">Country</div>
+                    <div className="mt-1 text-sm font-semibold text-slate-900 break-words">
+                      {detailsFields?.country || '—'}
+                    </div>
+                  </div>
+                </div>
+
+                {detailsMetadata?.extracted_text_excerpt ? (
+                  <div className="mt-4">
+                    <div className="text-xs font-semibold text-slate-700">Extracted text (excerpt)</div>
+                    <pre className="mt-2 max-h-56 overflow-auto rounded-xl bg-white p-3 text-xs text-slate-800 shadow-sm ring-1 ring-slate-200 whitespace-pre-wrap">
+                      {detailsMetadata.extracted_text_excerpt}
+                    </pre>
+                  </div>
+                ) : null}
+              </div>
+            ) : detailsMetadata ? (
+              <div className="rounded-xl bg-sky-50 px-4 py-3 ring-1 ring-slate-200">
+                <div className="text-sm font-semibold text-slate-900">AI metadata</div>
+                <pre className="mt-2 max-h-64 overflow-auto rounded-xl bg-white p-3 text-xs text-slate-800 shadow-sm ring-1 ring-slate-200 whitespace-pre-wrap">
+                  {JSON.stringify(detailsMetadata, null, 2)}
+                </pre>
+              </div>
+            ) : (
+              <div className="text-sm font-semibold text-slate-700">No AI metadata available.</div>
+            )}
+          </div>
+        )}
+      </Modal>
+
       <Modal open={uploadOpen} title="Upload New Document" onClose={() => (uploading ? null : setUploadOpen(false))}>
         {assessments.length === 0 ? (
           <div className="rounded-xl bg-sky-50 px-4 py-3 text-sm font-semibold text-slate-700 ring-1 ring-slate-200">
@@ -459,6 +592,16 @@ export default function DocumentRepositoryPage() {
                               className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50"
                             >
                               View
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDetailsDoc(d)
+                                setDetailsOpen(true)
+                              }}
+                              className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-sm ring-1 ring-amber-200 hover:bg-amber-100"
+                            >
+                              Details
                             </button>
                             <button
                               type="button"
