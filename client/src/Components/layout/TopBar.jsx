@@ -1,9 +1,18 @@
 import { SearchNormal1, NotificationBing, ProfileCircle } from 'iconsax-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+
+import { clearToken, isLoggedIn } from '../../lib/auth.js'
 
 import logo from '../../images/logo-removebg-preview.png'
 
 export default function TopBar({ title, rightLabel = 'Log out' }) {
+  const navigate = useNavigate()
+
+  function logout() {
+    clearToken()
+    navigate('/login', { replace: true })
+  }
+
   return (
     <header className="h-16 border-b border-slate-200 bg-white">
       <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-4">
@@ -40,7 +49,15 @@ export default function TopBar({ title, rightLabel = 'Log out' }) {
             >
               <ProfileCircle size={20} variant="Linear" color="#334155" />
             </button>
-            <span className="hidden sm:inline text-sm text-slate-600">{rightLabel}</span>
+            {isLoggedIn() ? (
+              <button
+                type="button"
+                onClick={logout}
+                className="hidden sm:inline text-sm font-semibold text-slate-600 hover:text-slate-900"
+              >
+                {rightLabel}
+              </button>
+            ) : null}
           </div>
         </div>
       </div>

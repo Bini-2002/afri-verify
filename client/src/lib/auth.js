@@ -44,6 +44,19 @@ export async function apiFetch(path, options = {}) {
         // ignore
       }
     }
+
+    if (res.status === 401) {
+      // Token is missing/expired/invalid or server secret changed.
+      clearToken()
+      try {
+        if (window.location.pathname.startsWith('/app')) {
+          window.location.assign('/login')
+        }
+      } catch {
+        // ignore
+      }
+    }
+
     const err = new Error(detail)
     err.status = res.status
     throw err
