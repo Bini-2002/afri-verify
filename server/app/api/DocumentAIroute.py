@@ -57,6 +57,15 @@ async def upload_document(
         db_doc.status = models.DocStatus.VERIFIED
         db_doc.ai_metadata = '{"verification_confidence": 0.95, "zuri_note": "Valid document structure detected."}'
         db.commit()
+
+        assessment = crud.get_assessment(db=db, user_id=current_user.id, assessment_id=assessment_id)
+        if assessment:
+            crud.apply_document_to_assessment_tracker(
+                db=db,
+                assessment=assessment,
+                doc_type=doc_type,
+                doc_status=db_doc.status,
+            )
     except Exception as e:
         print(f"AI Verification failed: {e}")
 

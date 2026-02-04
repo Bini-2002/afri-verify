@@ -1,5 +1,6 @@
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
+from fastapi import HTTPException
 
 from . import models, schemas
 
@@ -65,17 +66,20 @@ def update_user_profile(db: Session, user_id: str, payload: schemas.UserUpdate):
 
 
 def create_assessment(db: Session, assessment: schemas.AssessmentCreate, user_id: str):
-    # THE LOGIC GATE: Calculate Value Added
-    # Formula: ((ExWorks - NOM) / ExWorks) * 100
-    va = 0.0
-    if assessment.ex_works_price > 0:
-        va = ((assessment.ex_works_price - assessment.nom_value) / assessment.ex_works_price) * 100
+    # RoO Engine (AfCFTA VA): VA = ((EXW - NOM) / EXW) * 100
+    if assessment.ex_works_price <= 0:
+        raise HTTPException(status_code=400, detail="ex_works_price must be > 0")
+    if assessment.nom_value < 0:
+        raise HTTPException(status_code=400, detail="nom_value must be >= 0")
 
-    # Threshold check (AfCFTA default is often 40%)
-    status = models.AssessmentStatus.ELIGIBLE if va >= 40 else models.AssessmentStatus.INELIGIBLE
+    va = ((assessment.ex_works_price - assessment.nom_value) / assessment.ex_works_price) * 100
+    va = max(0.0, min(100.0, va))
+
+    # Status logic: ineligible if VA < 40; otherwise action_required until required docs verified.
+    status = models.AssessmentStatus.INELIGIBLE if va < 40 else models.AssessmentStatus.ACTION_REQUIRED
 
     db_assessment = models.ComplianceAssessment(
-        **assessment.dict(),
+        **assessment.model_dump(),
         user_id=user_id,
         va_percentage=va,
         status=status,
@@ -87,7 +91,94 @@ def create_assessment(db: Session, assessment: schemas.AssessmentCreate, user_id
 
 
 def get_user_assessments(db: Session, user_id: str):
-    return db.query(models.ComplianceAssessment).filter(models.ComplianceAssessment.user_id == user_id).all()
+    return (
+        db.query(models.ComplianceAssessment)
+        .filter(models.ComplianceAssessment.user_id == user_id)
+        .order_by(models.ComplianceAssessment.created_at.desc())
+        .all()
+    )
+
+
+def get_assessment(db: Session, user_id: str, assessment_id: str):
+    return (
+        db.query(models.ComplianceAssessment)
+        .filter(
+            models.ComplianceAssessment.user_id == user_id,
+            models.ComplianceAssessment.id == assessment_id,
+        )
+        .first()
+    )
+
+
+def _recompute_assessment_status(assessment: models.ComplianceAssessment) -> None:
+    # Keep VA-based ineligible as terminal in MVP.
+    if (assessment.va_percentage or 0.0) < 40:
+        assessment.status = models.AssessmentStatus.INELIGIBLE
+        return
+
+    required = [
+        assessment.docs_supplier_declaration_status,
+        assessment.docs_invoice_status,
+        assessment.docs_direct_transport_status,
+    ]
+    if all(s == models.DocStatus.VERIFIED for s in required):
+        assessment.status = models.AssessmentStatus.ELIGIBLE
+    else:
+        assessment.status = models.AssessmentStatus.ACTION_REQUIRED
+
+
+def update_assessment_tracker(
+    db: Session,
+    user_id: str,
+    assessment_id: str,
+    payload: schemas.AssessmentTrackerUpdate,
+):
+    assessment = get_assessment(db=db, user_id=user_id, assessment_id=assessment_id)
+    if not assessment:
+        return None
+
+    data = payload.model_dump(exclude_unset=True)
+    for field, value in data.items():
+        if value is None:
+            continue
+        normalized = str(value).lower().strip()
+        if normalized not in ("pending", "verified", "rejected"):
+            raise HTTPException(status_code=400, detail=f"Invalid status for {field}")
+        setattr(assessment, field, models.DocStatus(normalized))
+
+    _recompute_assessment_status(assessment)
+    db.add(assessment)
+    db.commit()
+    db.refresh(assessment)
+    return assessment
+
+
+def apply_document_to_assessment_tracker(
+    db: Session,
+    assessment: models.ComplianceAssessment,
+    doc_type: str,
+    doc_status: models.DocStatus,
+):
+    key = (doc_type or "").strip().lower().replace("-", "_")
+    mapping = {
+        "supplier_declaration": "docs_supplier_declaration_status",
+        "supplier declaration": "docs_supplier_declaration_status",
+        "invoice": "docs_invoice_status",
+        "commercial_invoice": "docs_invoice_status",
+        "commercial invoice": "docs_invoice_status",
+        "direct_transport": "docs_direct_transport_status",
+        "direct transport": "docs_direct_transport_status",
+        "bill_of_lading": "docs_direct_transport_status",
+        "bill of lading": "docs_direct_transport_status",
+    }
+    field = mapping.get(key)
+    if not field:
+        return
+
+    setattr(assessment, field, doc_status)
+    _recompute_assessment_status(assessment)
+    db.add(assessment)
+    db.commit()
 
 
 def create_document(

@@ -46,8 +46,16 @@ class ComplianceAssessment(Base):
     # Financials for Ad Valorem (RoO Manual Logic)
     ex_works_price = Column(Float, nullable=False)
     nom_value = Column(Float, nullable=False) # Non-Originating Materials
-    local_value = Column(Float, default=0.0)
+    # Optional breakdown for UI (not required for the VA formula)
+    materials_cost = Column(Float, nullable=True)
+    labor_cost = Column(Float, nullable=True)
+    overhead_cost = Column(Float, nullable=True)
     va_percentage = Column(Float) # Calculated: ((EXW - NOM) / EXW) * 100
+
+    # Compliance tracker (document readiness)
+    docs_supplier_declaration_status = Column(Enum(DocStatus), default=DocStatus.PENDING)
+    docs_invoice_status = Column(Enum(DocStatus), default=DocStatus.PENDING)
+    docs_direct_transport_status = Column(Enum(DocStatus), default=DocStatus.PENDING)
     
     status = Column(Enum(AssessmentStatus), default=AssessmentStatus.ACTION_REQUIRED)
     protocol_used = Column(String(50), default="AfCFTA Annex 2")

@@ -29,3 +29,37 @@ def read_assessments(
     current_user: models.User = Depends(get_current_user),
 ):
     return crud.get_user_assessments(db, user_id=current_user.id)
+
+
+@router.get("/{assessment_id}", response_model=schemas.AssessmentResponse)
+def read_assessment(
+    assessment_id: str,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    from fastapi import HTTPException
+
+    assessment = crud.get_assessment(db=db, user_id=current_user.id, assessment_id=assessment_id)
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    return assessment
+
+
+@router.patch("/{assessment_id}/tracker", response_model=schemas.AssessmentResponse)
+def update_tracker(
+    assessment_id: str,
+    payload: schemas.AssessmentTrackerUpdate,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    from fastapi import HTTPException
+
+    updated = crud.update_assessment_tracker(
+        db=db,
+        user_id=current_user.id,
+        assessment_id=assessment_id,
+        payload=payload,
+    )
+    if not updated:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    return updated

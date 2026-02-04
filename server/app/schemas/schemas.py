@@ -43,13 +43,25 @@ class AssessmentCreate(BaseModel):
     destination_country: str
     ex_works_price: float
     nom_value: float
+    materials_cost: Optional[float] = None
+    labor_cost: Optional[float] = None
+    overhead_cost: Optional[float] = None
 
 class AssessmentResponse(AssessmentCreate):
     id: str
     va_percentage: float
     status: str
+    docs_supplier_declaration_status: str
+    docs_invoice_status: str
+    docs_direct_transport_status: str
     created_at: datetime
     model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+
+class AssessmentTrackerUpdate(BaseModel):
+    docs_supplier_declaration_status: Optional[str] = None
+    docs_invoice_status: Optional[str] = None
+    docs_direct_transport_status: Optional[str] = None
 
 # --- DOCUMENT ---
 class DocumentResponse(BaseModel):
