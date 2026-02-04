@@ -5,6 +5,7 @@ from .database import init_db
 from .api.authenticationroute import router as auth_router
 from .api.calculationroute import router as calc_router
 from .api.DocumentAIroute import router as docs_router
+from .api.dashboardroute import router as dashboard_router
 from .api.ragroute import router as rag_router
 from .api.usersroute import router as users_router
 
@@ -22,6 +23,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(calc_router)
 app.include_router(docs_router)
+app.include_router(dashboard_router)
 app.include_router(rag_router)
 app.include_router(users_router)
 

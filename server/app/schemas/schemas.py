@@ -103,3 +103,28 @@ class OcrResponse(BaseModel):
     document_id: str
     extracted_text: str
     fields: OcrExtractionFields
+
+
+class ShipmentStatusOverview(BaseModel):
+    eligible_percent: float = 0.0
+    pending_percent: float = 0.0
+    action_required_percent: float = 0.0
+
+
+class DashboardRecentActivity(BaseModel):
+    assessment_id: str
+    shipment_reference: str
+    route: str
+    protocol_used: str
+    value_added_percent: float
+    data_added_at: datetime
+    application_status: str
+
+
+class DashboardSummaryResponse(BaseModel):
+    total_active_shipments: int
+    pending_application_checks: int
+    certified_trade_value: float
+    documents_awaiting_action: int
+    status_overview: ShipmentStatusOverview
+    recent_activities: List[DashboardRecentActivity] = []
