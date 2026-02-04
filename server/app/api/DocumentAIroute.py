@@ -1,6 +1,7 @@
 import os
 import shutil
 import mimetypes
+import json
 from typing import List
 
 from fastapi import APIRouter, Depends, File, Form, UploadFile
@@ -52,6 +53,46 @@ async def upload_document(
         user_id=current_user.id,
         assessment_id=assessment_id,
     )
+
+    # 2c. Invoice OCR + extraction (best-effort)
+    invoice_keys = {"invoice", "commercial_invoice", "commercial invoice"}
+    if doc_type_norm in invoice_keys:
+        try:
+            from ..services.ocr_invoice import extract_text, parse_fields
+
+            extracted_text, provider = extract_text(file_path)
+            fields = parse_fields(extracted_text)
+
+            db_doc.ai_metadata = json.dumps(
+                {
+                    "ocr_provider": provider,
+                    "extracted_text_excerpt": (extracted_text[:2000] + "…") if len(extracted_text) > 2000 else extracted_text,
+                    "extracted_fields": fields,
+                    "zuri_note": "Invoice OCR + extraction completed." if extracted_text else "Invoice OCR did not extract any text.",
+                }
+            )
+
+            # Only mark VERIFIED if we extracted something meaningful.
+            if extracted_text and (fields.get("item_name") or fields.get("price") or fields.get("country")):
+                db_doc.status = models.DocStatus.VERIFIED
+            else:
+                db_doc.status = models.DocStatus.PENDING
+
+            db.commit()
+
+            assessment = crud.get_assessment(db=db, user_id=current_user.id, assessment_id=assessment_id)
+            if assessment:
+                crud.apply_document_to_assessment_tracker(
+                    db=db,
+                    assessment=assessment,
+                    doc_type=doc_type_norm,
+                    doc_status=db_doc.status,
+                )
+
+            return db_doc
+        except Exception as e:
+            # Don't block upload; fall through to simulated verification for now.
+            print(f"Invoice OCR failed: {e}")
 
     # 2b. If this is an AfCFTA PDF, ingest it for RAG
     if doc_type_norm == "afcfta_pdf" and file.filename.lower().endswith(".pdf"):
@@ -133,6 +174,53 @@ def download_document(
         path=doc.file_path,
         filename=doc.file_name,
         media_type=mimetypes.guess_type(doc.file_name or "")[0] or "application/octet-stream",
+    )
+
+
+@router.post("/{document_id}/ocr", response_model=schemas.OcrResponse)
+def ocr_document(
+    document_id: str,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    from fastapi import HTTPException
+
+    doc = (
+        db.query(models.Document)
+        .filter(models.Document.id == document_id, models.Document.user_id == current_user.id)
+        .first()
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+    if not doc.file_path or not os.path.exists(doc.file_path):
+        raise HTTPException(status_code=404, detail="File not found on server")
+
+    from ..services.ocr_invoice import extract_text, parse_fields
+
+    extracted_text, provider = extract_text(doc.file_path)
+    fields = parse_fields(extracted_text)
+
+    doc.ai_metadata = json.dumps(
+        {
+            "ocr_provider": provider,
+            "extracted_text_excerpt": (extracted_text[:2000] + "…") if len(extracted_text) > 2000 else extracted_text,
+            "extracted_fields": fields,
+            "zuri_note": "OCR + extraction completed." if extracted_text else "OCR did not extract any text.",
+        }
+    )
+    if extracted_text and (fields.get("item_name") or fields.get("price") or fields.get("country")):
+        doc.status = models.DocStatus.VERIFIED
+    else:
+        doc.status = models.DocStatus.PENDING
+
+    db.add(doc)
+    db.commit()
+    db.refresh(doc)
+
+    return schemas.OcrResponse(
+        document_id=doc.id,
+        extracted_text=extracted_text,
+        fields=schemas.OcrExtractionFields(**fields),
     )
 
 
