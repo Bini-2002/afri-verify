@@ -1,4 +1,12 @@
-from .models import AssessmentStatus, Base, ComplianceAssessment, DocStatus, Document, User
+from .models import (
+    AssessmentStatus,
+    Base,
+    ComplianceAssessment,
+    DocStatus,
+    Document,
+    KnowledgeChunk,
+    User,
+)
 
 __all__ = [
     "AssessmentStatus",
@@ -6,5 +14,6 @@ __all__ = [
     "ComplianceAssessment",
     "DocStatus",
     "Document",
+    "KnowledgeChunk",
     "User",
 ]
