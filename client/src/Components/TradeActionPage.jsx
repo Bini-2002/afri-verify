@@ -1,3 +1,5 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import AppLayout from './layout/AppLayout.jsx'
 import {
   Paperclip,
@@ -5,6 +7,8 @@ import {
   TickCircle,
   TickSquare,
 } from 'iconsax-react'
+
+import { apiFetch } from '../lib/auth.js'
 
 function PillTitle({ children }) {
   return (
@@ -41,7 +45,7 @@ function UploadChip() {
   )
 }
 
-function CheckItem({ checked, label }) {
+function CheckItem({ checked, label, onUpload, busy }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="flex items-center gap-3">
@@ -59,7 +63,22 @@ function CheckItem({ checked, label }) {
         </span>
         <div className="text-sm font-semibold text-slate-800">{label}</div>
       </div>
-      <UploadChip />
+      <button
+        type="button"
+        onClick={onUpload}
+        disabled={busy}
+        className={
+          'inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm ring-1 ' +
+          (busy
+            ? 'bg-slate-100 text-slate-500 ring-slate-200'
+            : 'bg-amber-100 text-slate-900 ring-amber-200 hover:bg-amber-200')
+        }
+      >
+        <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-white ring-1 ring-amber-200">
+          <Paperclip size={12} variant="Linear" color="#0f172a" />
+        </span>
+        {busy ? 'Uploading…' : 'Upload'}
+      </button>
     </div>
   )
 }
@@ -84,22 +103,173 @@ function StepNumber({ number, variant }) {
 }
 
 export default function TradeActionPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const assessmentIdFromUrl = searchParams.get('assessmentId')
+
+  const [assessment, setAssessment] = useState(null)
+  const [profile, setProfile] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  const [uploading, setUploading] = useState({
+    supplier_declaration: false,
+    direct_transport: false,
+    invoice: false,
+  })
+
+  const fileInputs = {
+    supplier_declaration: useRef(null),
+    direct_transport: useRef(null),
+    invoice: useRef(null),
+  }
+
+  const docChecks = useMemo(() => {
+    const s = (assessment?.docs_supplier_declaration_status || '').toLowerCase()
+    const i = (assessment?.docs_invoice_status || '').toLowerCase()
+    const d = (assessment?.docs_direct_transport_status || '').toLowerCase()
+    return {
+      supplier_declaration: s === 'verified',
+      invoice: i === 'verified',
+      direct_transport: d === 'verified',
+    }
+  }, [assessment])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      setLoading(true)
+      setError('')
+      try {
+        const [me, chosenAssessment] = await Promise.all([
+          apiFetch('/users/me'),
+          (async () => {
+            if (assessmentIdFromUrl) {
+              return apiFetch(`/assessments/${encodeURIComponent(assessmentIdFromUrl)}`)
+            }
+            const list = await apiFetch('/assessments/my-assessments')
+            if (!Array.isArray(list) || list.length === 0) return null
+            const newest = list[0]
+            if (newest?.id) {
+              setSearchParams({ assessmentId: newest.id }, { replace: true })
+            }
+            return newest
+          })(),
+        ])
+
+        if (cancelled) return
+        setProfile(me)
+        setAssessment(chosenAssessment)
+      } catch (e) {
+        if (cancelled) return
+        setError(e?.message || 'Failed to load compliance tracker')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [assessmentIdFromUrl, setSearchParams])
+
+  async function uploadDocument(docType, file) {
+    if (!assessment?.id) return
+    setError('')
+    setUploading((prev) => ({ ...prev, [docType]: true }))
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      form.append('doc_type', docType)
+      form.append('assessment_id', assessment.id)
+
+      await apiFetch('/documents/upload', { method: 'POST', body: form })
+      const refreshed = await apiFetch(`/assessments/${encodeURIComponent(assessment.id)}`)
+      setAssessment(refreshed)
+    } catch (e) {
+      setError(e?.message || 'Upload failed')
+    } finally {
+      setUploading((prev) => ({ ...prev, [docType]: false }))
+    }
+  }
+
+  function openFilePicker(docType) {
+    const ref = fileInputs[docType]
+    if (ref?.current) ref.current.click()
+  }
+
+  const summary = useMemo(() => {
+    if (!assessment) return null
+    const home = profile?.home_country || 'Origin'
+    const route = `${home} → ${assessment.destination_country}`
+    const va = Math.round((assessment.va_percentage || 0) * 10) / 10
+    return {
+      product: assessment.product_name,
+      route,
+      protocol: assessment.protocol_used || 'AfCFTA',
+      status: (assessment.status || '').toLowerCase(),
+      va,
+    }
+  }, [assessment, profile])
+
   return (
     <AppLayout active="trade" title="Trade Action">
+      <input
+        ref={fileInputs.supplier_declaration}
+        type="file"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          e.target.value = ''
+          if (file) uploadDocument('supplier_declaration', file)
+        }}
+      />
+      <input
+        ref={fileInputs.direct_transport}
+        type="file"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          e.target.value = ''
+          if (file) uploadDocument('direct_transport', file)
+        }}
+      />
+      <input
+        ref={fileInputs.invoice}
+        type="file"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          e.target.value = ''
+          if (file) uploadDocument('invoice', file)
+        }}
+      />
+
+      {error ? (
+        <div className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 ring-1 ring-red-200">
+          {error}
+        </div>
+      ) : null}
+
       <div className="grid grid-cols-1 xl:grid-cols-[340px,1fr] 2xl:grid-cols-[340px,1fr,300px] gap-6 items-start">
         {/* Shipment Summary */}
         <section className="relative rounded-2xl bg-sky-200/60 shadow-sm ring-1 ring-slate-200 px-6 pb-6 pt-14">
           <PillTitle>Shipment Summary</PillTitle>
 
           <div className="mt-2 space-y-3">
-            <LabelRow label="Product" value="Cocoa Beans" />
-            <LabelRow label="Route" value="Ghana → Egypt" />
-            <LabelRow label="Protocol" value="AfCFTA" />
+            <LabelRow label="Product" value={summary?.product || (loading ? 'Loading…' : '—')} />
+            <LabelRow label="Route" value={summary?.route || (loading ? 'Loading…' : '—')} />
+            <LabelRow label="Protocol" value={summary?.protocol || (loading ? 'Loading…' : '—')} />
           </div>
 
           <div className="mt-6 flex justify-center">
             <div className="rounded-full bg-green-300 px-6 py-2 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-green-400/50">
-              Eligible(VA=65%)
+              {summary
+                ? `${summary.status.toUpperCase()} (VA=${summary.va}%)`
+                : loading
+                  ? 'Loading…'
+                  : 'No assessment selected'}
             </div>
           </div>
         </section>
@@ -122,7 +292,7 @@ export default function TradeActionPage() {
               <div className="pt-1">
                 <div className="text-sm font-semibold text-slate-900">Origin Criteria Meet</div>
                 <div className="mt-1 text-xs text-slate-600">
-                  Calculation Verified | Value Added &gt; 40%
+                  {summary ? `Calculation Verified | VA=${summary.va}%` : 'Calculation pending'}
                 </div>
               </div>
             </div>
@@ -138,9 +308,24 @@ export default function TradeActionPage() {
                 </div>
 
                 <div className="mt-4 space-y-3">
-                  <CheckItem checked label="Supplier Declaration" />
-                  <CheckItem checked label="Bill of Landing" />
-                  <CheckItem checked={false} label="Commercial Invoice" />
+                  <CheckItem
+                    checked={docChecks.supplier_declaration}
+                    label="Supplier Declaration"
+                    busy={uploading.supplier_declaration}
+                    onUpload={() => openFilePicker('supplier_declaration')}
+                  />
+                  <CheckItem
+                    checked={docChecks.direct_transport}
+                    label="Direct Transport (Bill of Lading)"
+                    busy={uploading.direct_transport}
+                    onUpload={() => openFilePicker('direct_transport')}
+                  />
+                  <CheckItem
+                    checked={docChecks.invoice}
+                    label="Commercial Invoice"
+                    busy={uploading.invoice}
+                    onUpload={() => openFilePicker('invoice')}
+                  />
                 </div>
               </div>
             </div>
