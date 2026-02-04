@@ -3,6 +3,7 @@ import shutil
 from typing import List
 
 from fastapi import APIRouter, Depends, File, Form, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 import google.generativeai as genai
@@ -78,6 +79,31 @@ def get_my_documents(
     current_user: models.User = Depends(get_current_user),
 ):
     return crud.get_documents(db, user_id=current_user.id)
+
+
+@router.get("/{document_id}/download")
+def download_document(
+    document_id: str,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    from fastapi import HTTPException
+
+    doc = (
+        db.query(models.Document)
+        .filter(models.Document.id == document_id, models.Document.user_id == current_user.id)
+        .first()
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+    if not doc.file_path or not os.path.exists(doc.file_path):
+        raise HTTPException(status_code=404, detail="File not found on server")
+
+    return FileResponse(
+        path=doc.file_path,
+        filename=doc.file_name,
+        media_type="application/octet-stream",
+    )
 
 
 @router.post("/chat")
