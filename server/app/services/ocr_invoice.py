@@ -32,12 +32,10 @@ def extract_text(file_path: str) -> tuple[str, str]:
         except Exception:
             pass
 
-    # Images: tesseract OCR
     try:
         from PIL import Image
         import pytesseract
 
-        # Optional env override for Windows installs
         tcmd = os.getenv("TESSERACT_CMD")
         if tcmd:
             pytesseract.pytesseract.tesseract_cmd = tcmd

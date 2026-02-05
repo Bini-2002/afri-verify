@@ -2,6 +2,7 @@ import os
 from typing import List
 
 from fastapi import APIRouter, Depends
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 import google.generativeai as genai
@@ -24,10 +25,28 @@ def rag_chat(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    rows = crud.get_afcfta_knowledge_chunks_for_user(db, user_id=current_user.id)
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY is not set on the server")
+
+    rows = crud.get_rag_knowledge_chunks_for_user(
+        db,
+        user_id=current_user.id,
+        doc_types=[
+            "afcfta_pdf",
+            "roo_reference",
+            "invoice",
+            "commercial_invoice",
+            "supplier_declaration",
+            "direct_transport",
+        ],
+    )
     if not rows:
         return schemas.RagChatResponse(
-            answer="No AfCFTA PDFs indexed yet. Upload an 'AfCFTA PDF (RAG)' document first.",
+            answer=(
+                "No documents indexed for chat yet. Upload your shipment documents (invoice, supplier declaration, direct transport) "
+                "and/or a RoO reference PDF (doc_type=afcfta_pdf or roo_reference), then ask again."
+            ),
             citations=[],
         )
 
@@ -56,7 +75,7 @@ def rag_chat(
         doc = doc_by_chunk_id[chunk_id]
         label = f"S{idx}"
         sources.append(
-            f"[{label}] file={doc.file_name} page={chunk.page_number}\n{chunk.content}"
+            f"[{label}] file={doc.file_name} type={doc.doc_type} page={chunk.page_number}\n{chunk.content}"
         )
         snippet = chunk.content
         if len(snippet) > 280:
@@ -72,10 +91,11 @@ def rag_chat(
         )
 
     system_instruction = (
-        "You are Zuri, an AfCFTA trade expert. "
-        "Answer using ONLY the provided sources. "
-        "If the sources do not contain the answer, say: 'Not found in provided AfCFTA PDFs.' "
-        "Keep the answer brief and include source labels like [S1], [S2] where relevant."
+        "You are Zuri, an AfCFTA Rules of Origin (RoO) compliance assistant. "
+        "Answer using ONLY the provided sources (user shipment documents and RoO reference PDFs). "
+        "If the sources do not contain the answer, say: 'Not found in provided documents.' "
+        "When asked what to do next, provide a short actionable checklist. "
+        "Include source labels like [S1], [S2] where relevant."
     )
 
     prompt = (
@@ -87,8 +107,8 @@ def rag_chat(
     try:
         chat = _model.start_chat(history=[])
         resp = chat.send_message(prompt)
-        answer = (resp.text or "").strip() or "Not found in provided AfCFTA PDFs."
-    except Exception:
-        answer = "I am currently offline. Please try again later."
+        answer = (resp.text or "").strip() or "Not found in provided documents."
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Gemini request failed: {type(e).__name__}")
 
     return schemas.RagChatResponse(answer=answer, citations=citations)

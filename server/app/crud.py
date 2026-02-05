@@ -245,3 +245,20 @@ def get_afcfta_knowledge_chunks_for_user(db: Session, *, user_id: str):
         .filter(func.lower(models.Document.doc_type) == "afcfta_pdf")
         .all()
     )
+
+
+def get_rag_knowledge_chunks_for_user(db: Session, *, user_id: str, doc_types):
+    from sqlalchemy import func
+
+    normalized = [str(t).lower().strip() for t in (doc_types or []) if str(t).strip()]
+    if not normalized:
+        return []
+
+    return (
+        db.query(models.KnowledgeChunk, models.Document)
+        .join(models.Document, models.Document.id == models.KnowledgeChunk.document_id)
+        .filter(models.KnowledgeChunk.user_id == user_id)
+        .filter(models.Document.user_id == user_id)
+        .filter(func.lower(models.Document.doc_type).in_(normalized))
+        .all()
+    )

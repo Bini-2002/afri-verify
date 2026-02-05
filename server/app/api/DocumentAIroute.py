@@ -33,11 +33,12 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 async def upload_document(
     file: UploadFile = File(...),
     doc_type: str = Form(...),
-    assessment_id: str = Form(...),
+    assessment_id: str | None = Form(None),
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(get_current_user),
 ):
     doc_type_norm = (doc_type or "").strip().lower()
+    assessment_id_norm = (assessment_id or "").strip() or None
 
     # 1. Save File Locally
     file_path = os.path.join(UPLOAD_DIR, file.filename)
@@ -51,7 +52,7 @@ async def upload_document(
         file_path=file_path,
         doc_type=doc_type_norm,
         user_id=current_user.id,
-        assessment_id=assessment_id,
+        assessment_id=assessment_id_norm,
     )
 
     # 2c. Invoice OCR + extraction (best-effort)
@@ -80,7 +81,11 @@ async def upload_document(
 
             db.commit()
 
-            assessment = crud.get_assessment(db=db, user_id=current_user.id, assessment_id=assessment_id)
+            assessment = (
+                crud.get_assessment(db=db, user_id=current_user.id, assessment_id=assessment_id_norm)
+                if assessment_id_norm
+                else None
+            )
             if assessment:
                 crud.apply_document_to_assessment_tracker(
                     db=db,
@@ -88,36 +93,53 @@ async def upload_document(
                     doc_type=doc_type_norm,
                     doc_status=db_doc.status,
                 )
-
-            return db_doc
         except Exception as e:
-            # Don't block upload; fall through to simulated verification for now.
+            # Don't block upload; fall through.
             print(f"Invoice OCR failed: {e}")
 
-    # 2b. If this is an AfCFTA PDF, ingest it for RAG
-    if doc_type_norm == "afcfta_pdf" and file.filename.lower().endswith(".pdf"):
-        try:
-            from ..services.rag import chunk_text
+    # 2b. Index for RAG (shipment docs + reference PDFs)
+    rag_types = {
+        "afcfta_pdf",
+        "roo_reference",
+        "invoice",
+        "commercial_invoice",
+        "commercial invoice",
+        "supplier_declaration",
+        "direct_transport",
+    }
 
-            reader = PdfReader(file_path)
+    try:
+        if doc_type_norm in rag_types:
+            from ..services.rag import chunk_text
+            from ..services.ocr_invoice import extract_text
+
             rows = []
             chunk_index = 0
-            for i, page in enumerate(reader.pages):
-                text = page.extract_text() or ""
-                text = " ".join(text.split())
-                for chunk in chunk_text(text):
-                    rows.append((i + 1, chunk_index, chunk))
+
+            if file.filename.lower().endswith(".pdf"):
+                reader = PdfReader(file_path)
+                for i, page in enumerate(reader.pages):
+                    text = page.extract_text() or ""
+                    text = " ".join(text.split())
+                    for chunk in chunk_text(text):
+                        rows.append((i + 1, chunk_index, chunk))
+                        chunk_index += 1
+            else:
+                extracted_text, _provider = extract_text(file_path)
+                extracted_text = " ".join((extracted_text or "").split())
+                for chunk in chunk_text(extracted_text):
+                    rows.append((None, chunk_index, chunk))
                     chunk_index += 1
 
-            crud.replace_knowledge_chunks_for_document(
-                db,
-                user_id=current_user.id,
-                document_id=db_doc.id,
-                chunks=rows,
-            )
-        except Exception as e:
-            # Keep upload flow working even if ingestion fails
-            print(f"AfCFTA PDF ingestion failed: {e}")
+            if rows:
+                crud.replace_knowledge_chunks_for_document(
+                    db,
+                    user_id=current_user.id,
+                    document_id=db_doc.id,
+                    chunks=rows,
+                )
+    except Exception as e:
+        print(f"RAG indexing failed: {e}")
 
     # 3. Trigger Zuri AI Verification (Simplified for Prototype)
     # In production, this should be a background task (Celery/Redis)
@@ -126,11 +148,17 @@ async def upload_document(
         _ = prompt  # placeholder to keep flow; file content upload not implemented
 
         # Simulating AI success for now to ensure flow works
+        # (Don't overwrite invoice OCR metadata if already present.)
         db_doc.status = models.DocStatus.VERIFIED
-        db_doc.ai_metadata = '{"verification_confidence": 0.95, "zuri_note": "Valid document structure detected."}'
+        if not db_doc.ai_metadata:
+            db_doc.ai_metadata = '{"verification_confidence": 0.95, "zuri_note": "Valid document structure detected."}'
         db.commit()
 
-        assessment = crud.get_assessment(db=db, user_id=current_user.id, assessment_id=assessment_id)
+        assessment = (
+            crud.get_assessment(db=db, user_id=current_user.id, assessment_id=assessment_id_norm)
+            if assessment_id_norm
+            else None
+        )
         if assessment:
             crud.apply_document_to_assessment_tracker(
                 db=db,
