@@ -52,6 +52,20 @@ def _get_global_user_id(db: Session) -> Optional[str]:
     return getattr(user, "id", None)
 
 
+def _get_user_ids_for_rag(db: Session, *, user_id: str) -> List[str]:
+    global_user_id = _get_global_user_id(db)
+    user_ids = [user_id] + ([global_user_id] if global_user_id else [])
+    # Preserve order but dedupe
+    seen = set()
+    out: List[str] = []
+    for uid in user_ids:
+        if not uid or uid in seen:
+            continue
+        seen.add(uid)
+        out.append(uid)
+    return out
+
+
 def _build_langchain_documents(
     db: Session,
     *,
@@ -87,8 +101,7 @@ def _get_vector_store(
 ):
     _ensure_google_api_key_from_gemini()
 
-    global_user_id = _get_global_user_id(db)
-    user_ids = [user_id] + ([global_user_id] if global_user_id else [])
+    user_ids = _get_user_ids_for_rag(db, user_id=user_id)
     cache_key = "|".join(user_ids)
 
     signature = _get_signature(db, user_ids=user_ids)
@@ -230,8 +243,19 @@ def rag_chat_langchain(
         "direct_transport",
     ]
 
-    vector_store = _get_vector_store(db, user_id=current_user.id, doc_types=doc_types)
-    if vector_store is None:
+    # Try vector retrieval (Gemini embeddings). If embeddings quota is exhausted,
+    # fall back to a local BM25 search over the same chunks.
+    vector_store = None
+    vector_error: Optional[HTTPException] = None
+    try:
+        vector_store = _get_vector_store(db, user_id=current_user.id, doc_types=doc_types)
+    except HTTPException as e:
+        vector_error = e
+
+    user_ids = _get_user_ids_for_rag(db, user_id=current_user.id)
+    all_docs = _build_langchain_documents(db, user_ids=user_ids, doc_types=doc_types)
+
+    if not all_docs:
         return schemas.RagChatResponse(
             answer=(
                 "No documents indexed for chat yet. Upload your shipment documents (invoice, supplier declaration, direct transport), "
@@ -244,7 +268,32 @@ def rag_chat_langchain(
     if not question:
         raise HTTPException(status_code=400, detail="message is required")
 
-    retrieved_docs = vector_store.similarity_search(question, k=6)
+    retrieved_docs = []
+    if vector_store is not None:
+        retrieved_docs = vector_store.similarity_search(question, k=6)
+    else:
+        # Fallback: local lexical ranking (no embedding API calls).
+        from ..services.rag import bm25_rank
+
+        corpus = []
+        by_id = {}
+        for d in all_docs:
+            md = getattr(d, "metadata", {}) or {}
+            chunk_id = str(md.get("chunk_id") or "")
+            if not chunk_id:
+                continue
+            by_id[chunk_id] = d
+            corpus.append((chunk_id, d.page_content or ""))
+
+        ranked = bm25_rank(question, corpus)
+        retrieved_docs = [by_id[r.chunk_id] for r in ranked[:6] if r.chunk_id in by_id]
+
+        # If we *did* have a vector error, surface a gentle note in the system instruction.
+        if vector_error and vector_error.status_code in (429, 502):
+            system_instruction = (
+                system_instruction
+                + "\n\nNote: Vector embeddings were unavailable, so retrieval used local keyword search."
+            )
     citations = _citations_from_docs(retrieved_docs)
     sources = _sources_block(retrieved_docs)
 
