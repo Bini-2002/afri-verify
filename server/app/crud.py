@@ -283,5 +283,10 @@ def get_rag_knowledge_chunks_for_users(db: Session, *, user_ids, doc_types):
         .filter(models.KnowledgeChunk.user_id.in_(ids))
         .filter(models.Document.user_id == models.KnowledgeChunk.user_id)
         .filter(func.lower(models.Document.doc_type).in_(normalized))
+        .order_by(
+            models.Document.file_name.asc(),
+            models.KnowledgeChunk.page_number.asc().nullsfirst(),
+            models.KnowledgeChunk.chunk_index.asc(),
+        )
         .all()
     )

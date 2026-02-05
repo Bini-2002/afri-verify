@@ -104,6 +104,15 @@ def _get_vector_store(
     if not docs:
         return None
 
+    # Demo reliability: embedding hundreds/thousands of chunks can hit API deadlines.
+    # Cap the number of chunks we embed into the in-memory vector store.
+    try:
+        max_chunks = int(os.getenv("RAG_MAX_EMBED_CHUNKS") or "160")
+    except Exception:
+        max_chunks = 160
+    if max_chunks > 0 and len(docs) > max_chunks:
+        docs = docs[:max_chunks]
+
     try:
         from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
@@ -112,7 +121,7 @@ def _get_vector_store(
         # Reduce timeout risk by using smaller embedding batches.
         # InMemoryVectorStore calls embed_documents(texts) without passing batch_size,
         # so we wrap the embeddings object.
-        embed_batch_size = int(os.getenv("RAG_EMBED_BATCH_SIZE") or "10")
+        embed_batch_size = int(os.getenv("RAG_EMBED_BATCH_SIZE") or "5")
 
         class _BatchedEmbeddings:
             def __init__(self, inner, batch_size: int):
@@ -150,8 +159,8 @@ def _get_vector_store(
             status_code=502,
             detail=(
                 "Failed to embed documents for RAG (Gemini embeddings). "
-                "For local demo, try setting RAG_EMBED_BATCH_SIZE=5 (or 3) and retry. "
-                f"Root error: {type(e).__name__}"
+                "For local demo, try setting RAG_EMBED_BATCH_SIZE=3 and/or RAG_MAX_EMBED_CHUNKS=80 then restart the server. "
+                f"Root error: {type(e).__name__}: {str(e)[:220]}"
             ),
         )
 
