@@ -1,0 +1,25 @@
+AIR WAYBILL (DIRECT TRANSPORT EVIDENCE)
+
+Air Waybill No: AWB-KE-2026-90211
+Date of Issue: 2026-02-05
+Carrier: Pan-Africa Air Cargo
+
+Shipper:
+  Rift Valley Roasters Co., Nairobi, Kenya
+
+Consignee:
+  Cape Town Specialty Coffee Distributors (Pty) Ltd., Cape Town, South Africa
+
+Airport of Departure: NBO (Nairobi)
+Airport of Destination: CPT (Cape Town)
+
+Goods:
+  Roasted Arabica Coffee Beans, 1 kg packs
+  600 cartons / 6,000 packs
+
+Handling Information:
+  Cargo remains sealed and under airline custody during transport.
+  No processing or repackaging occurs during transit.
+
+Authorized Airline Signature: ____________________
+Date: 2026-02-05

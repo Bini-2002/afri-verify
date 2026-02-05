@@ -1,0 +1,47 @@
+COMMERCIAL INVOICE
+
+Invoice No: INV-KE-2026-0142
+Invoice Date: 2026-02-05
+Currency: USD
+Incoterms: EXW Nairobi (Kenya)
+Payment Terms: Net 15 days
+
+Seller / Exporter:
+  Rift Valley Roasters Co.
+  Westlands, Nairobi, Kenya
+  Email: sales@riftvalleyroasters.example
+
+Buyer / Importer:
+  Cape Town Specialty Coffee Distributors (Pty) Ltd.
+  Cape Town, South Africa
+  Email: orders@capetowncoffee.example
+
+Ship From: Nairobi, Kenya
+Ship To: Cape Town, South Africa
+Country of Export: Kenya
+Destination Country: South Africa
+Country of Origin (Goods): Kenya
+
+Goods Description:
+  Item: Roasted Arabica Coffee Beans, 1 kg retail packs
+  HS Code (declared): 0901.21
+  Packaging: 10 packs per carton
+
+Quantity & Pricing:
+  Quantity: 600 cartons (6,000 packs)
+  Unit Price: 7.50 USD / pack
+  Line Total: 45,000.00 USD
+
+Additional Charges:
+  Export packing: 900.00 USD
+
+Invoice Total (EXW): 45,900.00 USD
+
+Notes for RoO / Compliance demo:
+  This invoice supports the shipment value used in value-added calculations.
+
+Signed for and on behalf of Seller:
+  Name: Peter Mwangi
+  Title: Finance Officer
+  Signature: ____________________
+  Date: 2026-02-05

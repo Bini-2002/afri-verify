@@ -1,0 +1,32 @@
+SUPPLIER DECLARATION (ORIGIN OF MATERIALS)
+
+Declaration No: SD-2026-0019
+Date: 2026-02-05
+Validity: 2026-02-05 to 2026-12-31
+
+Supplier:
+  Accra Packaging Works Ltd.
+  North Industrial Area, Accra, Ghana
+  Email: compliance@accrapackaging.example
+
+Customer (Manufacturer / Exporter):
+  Akwaaba Naturals Ltd.
+  Tema, Ghana
+
+Materials Supplied:
+  Material: Food-grade lined cartons (25 kg capacity)
+  Internal SKU: PKG-25KG-LINED
+  Approx. Monthly Quantity: 250 units
+
+Origin Statement:
+  We hereby declare that the materials described above are originating in Ghana.
+  The materials are manufactured in Ghana using originating inputs.
+
+Purpose:
+  This declaration is issued to support preferential Rules of Origin claims under the AfCFTA.
+
+Authorized Signatory:
+  Name: Kofi Boateng
+  Title: Compliance Officer
+  Signature: ____________________
+  Date: 2026-02-05

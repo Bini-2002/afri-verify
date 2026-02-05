@@ -262,3 +262,26 @@ def get_rag_knowledge_chunks_for_user(db: Session, *, user_id: str, doc_types):
         .filter(func.lower(models.Document.doc_type).in_(normalized))
         .all()
     )
+
+
+def get_rag_knowledge_chunks_for_users(db: Session, *, user_ids, doc_types):
+    """Fetch (KnowledgeChunk, Document) rows for multiple owners.
+
+    Useful for combining a user's uploaded docs with a global/system knowledge base.
+    """
+
+    from sqlalchemy import func
+
+    ids = [str(u).strip() for u in (user_ids or []) if str(u).strip()]
+    normalized = [str(t).lower().strip() for t in (doc_types or []) if str(t).strip()]
+    if not ids or not normalized:
+        return []
+
+    return (
+        db.query(models.KnowledgeChunk, models.Document)
+        .join(models.Document, models.Document.id == models.KnowledgeChunk.document_id)
+        .filter(models.KnowledgeChunk.user_id.in_(ids))
+        .filter(models.Document.user_id == models.KnowledgeChunk.user_id)
+        .filter(func.lower(models.Document.doc_type).in_(normalized))
+        .all()
+    )

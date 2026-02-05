@@ -31,24 +31,36 @@ def _ensure_google_api_key_from_gemini() -> None:
         os.environ["GOOGLE_API_KEY"] = gemini
 
 
-def _get_signature(db: Session, *, user_id: str) -> Tuple[int, Optional[datetime]]:
+def _get_signature(db: Session, *, user_ids: List[str]) -> Tuple[int, Optional[datetime]]:
+    ids = [str(u).strip() for u in (user_ids or []) if str(u).strip()]
+    if not ids:
+        return 0, None
+
     count, max_created_at = (
         db.query(func.count(models.KnowledgeChunk.id), func.max(models.KnowledgeChunk.created_at))
-        .filter(models.KnowledgeChunk.user_id == user_id)
+        .filter(models.KnowledgeChunk.user_id.in_(ids))
         .one()
     )
     return int(count or 0), max_created_at
 
 
+def _get_global_user_id(db: Session) -> Optional[str]:
+    email = (os.getenv("RAG_GLOBAL_USER_EMAIL") or "").strip()
+    if not email:
+        return None
+    user = crud.get_user_by_email(db, email=email)
+    return getattr(user, "id", None)
+
+
 def _build_langchain_documents(
     db: Session,
     *,
-    user_id: str,
+    user_ids: List[str],
     doc_types: List[str],
 ) -> List[Any]:
     from langchain_core.documents import Document as LCDocument
 
-    rows = crud.get_rag_knowledge_chunks_for_user(db, user_id=user_id, doc_types=doc_types)
+    rows = crud.get_rag_knowledge_chunks_for_users(db, user_ids=user_ids, doc_types=doc_types)
     docs: List[LCDocument] = []
     for chunk, doc in rows:
         docs.append(
@@ -60,6 +72,7 @@ def _build_langchain_documents(
                     "file_name": doc.file_name,
                     "doc_type": doc.doc_type,
                     "page_number": chunk.page_number,
+                    "owner_user_id": chunk.user_id,
                 },
             )
         )
@@ -74,16 +87,20 @@ def _get_vector_store(
 ):
     _ensure_google_api_key_from_gemini()
 
-    signature = _get_signature(db, user_id=user_id)
+    global_user_id = _get_global_user_id(db)
+    user_ids = [user_id] + ([global_user_id] if global_user_id else [])
+    cache_key = "|".join(user_ids)
+
+    signature = _get_signature(db, user_ids=user_ids)
 
     now = datetime.utcnow()
     with _CACHE_LOCK:
-        cached = _CACHE.get(user_id)
-        ttl = _CACHE_TTL.get(user_id)
+        cached = _CACHE.get(cache_key)
+        ttl = _CACHE_TTL.get(cache_key)
         if cached and ttl and ttl > now and cached[0] == signature:
             return cached[1]
 
-    docs = _build_langchain_documents(db, user_id=user_id, doc_types=doc_types)
+    docs = _build_langchain_documents(db, user_ids=user_ids, doc_types=doc_types)
     if not docs:
         return None
 
@@ -111,8 +128,8 @@ def _get_vector_store(
     vector_store.add_documents(docs)
 
     with _CACHE_LOCK:
-        _CACHE[user_id] = (signature, vector_store)
-        _CACHE_TTL[user_id] = datetime.utcnow() + timedelta(seconds=_CACHE_TTL_SECONDS)
+        _CACHE[cache_key] = (signature, vector_store)
+        _CACHE_TTL[cache_key] = datetime.utcnow() + timedelta(seconds=_CACHE_TTL_SECONDS)
 
     return vector_store
 
@@ -180,8 +197,8 @@ def rag_chat_langchain(
     if vector_store is None:
         return schemas.RagChatResponse(
             answer=(
-                "No documents indexed for chat yet. Upload your shipment documents (invoice, supplier declaration, direct transport) "
-                "and/or a RoO reference PDF (doc_type=afcfta_pdf or roo_reference), then click 'Index for Chat' and ask again."
+                "No documents indexed for chat yet. Upload your shipment documents (invoice, supplier declaration, direct transport), "
+                "then click 'Index for Chat' and ask again."
             ),
             citations=[],
         )

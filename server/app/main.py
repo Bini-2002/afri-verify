@@ -10,6 +10,8 @@ from .api.DocumentAIroute import router as docs_router
 from .api.dashboardroute import router as dashboard_router
 from .api.ragroute import router as rag_router
 from .api.usersroute import router as users_router
+from .services.rag_global_seed import ensure_global_roo_reference_index
+from .database import SessionLocal
 
 app = FastAPI()
 
@@ -32,6 +34,19 @@ app.include_router(docs_router)
 app.include_router(dashboard_router)
 app.include_router(rag_router)
 app.include_router(users_router)
+
+
+@app.on_event("startup")
+def _seed_global_roo_reference() -> None:
+    # Best-effort seeding for local demo. Never crash startup if it fails.
+    try:
+        db = SessionLocal()
+        try:
+            ensure_global_roo_reference_index(db)
+        finally:
+            db.close()
+    except Exception:
+        pass
 
 @app.get("/")
 def home():

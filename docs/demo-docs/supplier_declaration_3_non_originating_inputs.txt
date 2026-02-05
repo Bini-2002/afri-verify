@@ -1,0 +1,31 @@
+SUPPLIER DECLARATION (NON-ORIGINATING INPUTS)
+
+Declaration No: SD-2026-0077
+Date: 2026-02-05
+Validity: 2026-02-05 to 2026-05-31
+
+Supplier:
+  Global Trims Importers LLC
+  Alexandria, Egypt
+  Email: docs@globaltrims.example
+
+Customer (Manufacturer / Exporter):
+  Nile Apparel Manufacturing S.A.E.
+  Giza, Egypt
+
+Materials Supplied:
+  Material: Plastic buttons, assorted sizes
+  Internal SKU: BTN-PL-ASSORT
+
+Origin / Status Statement:
+  We declare that the materials described above are non-originating.
+  Country of origin of these inputs: China.
+
+Purpose:
+  This declaration supports the exporter’s value-added / non-originating materials calculation for AfCFTA Rules of Origin.
+
+Authorized Signatory:
+  Name: Youssef Adel
+  Title: Documentation Supervisor
+  Signature: ____________________
+  Date: 2026-02-05
