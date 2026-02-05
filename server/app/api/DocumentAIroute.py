@@ -321,8 +321,18 @@ async def chat_with_zuri(
 ):
     system_instruction = "You are Zuri, an AfCFTA trade expert. Answer briefly and professionally."
     try:
-        chat = model.start_chat(history=[])
-        response = chat.send_message(f"{system_instruction} User asks: {request.message}")
-        return {"response": response.text}
+        # Local-demo safe: use LangChain's Gemini integration if a key is configured.
+        if not os.getenv("GOOGLE_API_KEY") and os.getenv("GEMINI_API_KEY"):
+            os.environ["GOOGLE_API_KEY"] = os.getenv("GEMINI_API_KEY") or ""
+
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        from langchain_core.messages import SystemMessage, HumanMessage
+
+        llm = ChatGoogleGenerativeAI(model=os.getenv("GEMINI_CHAT_MODEL", "gemini-2.5-flash-lite"))
+        msg = llm.invoke([
+            SystemMessage(content=system_instruction),
+            HumanMessage(content=request.message),
+        ])
+        return {"response": getattr(msg, "content", str(msg))}
     except Exception:
         return {"response": "I am currently offline. Please try again later."}
