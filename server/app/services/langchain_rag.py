@@ -268,6 +268,14 @@ def rag_chat_langchain(
     if not question:
         raise HTTPException(status_code=400, detail="message is required")
 
+    system_instruction = (
+        "You are Zuri, an AfCFTA Rules of Origin (RoO) compliance assistant. "
+        "Answer using ONLY the provided sources (user shipment documents and RoO reference PDFs). "
+        "If the sources do not contain the answer, say: 'Not found in provided documents.' "
+        "When asked what to do next, provide a short actionable checklist. "
+        "Include source labels like [S1], [S2] where relevant."
+    )
+
     retrieved_docs = []
     if vector_store is not None:
         retrieved_docs = vector_store.similarity_search(question, k=6)
@@ -289,21 +297,13 @@ def rag_chat_langchain(
         retrieved_docs = [by_id[r.chunk_id] for r in ranked[:6] if r.chunk_id in by_id]
 
         # If we *did* have a vector error, surface a gentle note in the system instruction.
-        if vector_error and vector_error.status_code in (429, 502):
+        if vector_error and vector_error.status_code in (429, 502, 504):
             system_instruction = (
                 system_instruction
                 + "\n\nNote: Vector embeddings were unavailable, so retrieval used local keyword search."
             )
     citations = _citations_from_docs(retrieved_docs)
     sources = _sources_block(retrieved_docs)
-
-    system_instruction = (
-        "You are Zuri, an AfCFTA Rules of Origin (RoO) compliance assistant. "
-        "Answer using ONLY the provided sources (user shipment documents and RoO reference PDFs). "
-        "If the sources do not contain the answer, say: 'Not found in provided documents.' "
-        "When asked what to do next, provide a short actionable checklist. "
-        "Include source labels like [S1], [S2] where relevant."
-    )
 
     if mode == "agent":
         # Best-effort agent mode (API varies by LangChain version).
