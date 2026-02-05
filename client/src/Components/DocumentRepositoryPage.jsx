@@ -443,12 +443,10 @@ export default function DocumentRepositoryPage() {
               <option value="supplier_declaration">Supplier Declaration</option>
               <option value="direct_transport">Direct Transport</option>
               <option value="bill_of_lading">Bill of Lading</option>
-              <option value="afcfta_pdf">AfCFTA PDF (RAG)</option>
-              <option value="roo_reference">RoO Guide / Reference PDF (RAG)</option>
               <option value="other">Other</option>
             </Select>
             <div className="mt-2 text-xs text-slate-600">
-              Tip: use the standard types above to update the compliance tracker automatically.
+              Tip: use the standard types above to update the compliance tracker automatically. The AfCFTA RoO reference is preloaded for chat.
             </div>
           </div>
 
