@@ -8,7 +8,8 @@ def _clean_text(text: str) -> str:
 
 
 def extract_text(file_path: str) -> tuple[str, str]:
-    """Extract text from an invoice file.
+    """
+    Extract text from an invoice file.
 
     Returns (extracted_text, provider)
 
