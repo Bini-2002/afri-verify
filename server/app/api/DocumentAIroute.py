@@ -8,8 +8,6 @@ from fastapi import APIRouter, Depends, File, Form, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
-import google.generativeai as genai
-
 from pypdf import PdfReader
 
 from .. import crud, database, models, schemas
@@ -20,10 +18,6 @@ router = APIRouter(
     prefix="/documents",
     tags=["Documents & AI"],
 )
-
-# AI CONFIGURATION
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-2.5-flash-preview-09-2025")
 
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)

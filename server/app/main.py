@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from dotenv import load_dotenv
+
 from .database import init_db
 from .api.authenticationroute import router as auth_router
 from .api.calculationroute import router as calc_router
@@ -10,6 +12,10 @@ from .api.ragroute import router as rag_router
 from .api.usersroute import router as users_router
 
 app = FastAPI()
+
+# Local/dev convenience: load server/.env if present.
+# This does not override already-set environment variables.
+load_dotenv()
 
 init_db()
 
