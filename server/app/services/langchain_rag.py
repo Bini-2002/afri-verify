@@ -107,7 +107,25 @@ def _get_vector_store(
     try:
         from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
-        embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+        base_embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+
+        # Reduce timeout risk by using smaller embedding batches.
+        # InMemoryVectorStore calls embed_documents(texts) without passing batch_size,
+        # so we wrap the embeddings object.
+        embed_batch_size = int(os.getenv("RAG_EMBED_BATCH_SIZE") or "10")
+
+        class _BatchedEmbeddings:
+            def __init__(self, inner, batch_size: int):
+                self._inner = inner
+                self._batch_size = max(1, batch_size)
+
+            def embed_documents(self, texts: List[str]):
+                return self._inner.embed_documents(texts, batch_size=self._batch_size)
+
+            def embed_query(self, text: str):
+                return self._inner.embed_query(text)
+
+        embeddings = _BatchedEmbeddings(base_embeddings, embed_batch_size)
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -125,7 +143,17 @@ def _get_vector_store(
         from langchain_community.vectorstores import InMemoryVectorStore  # type: ignore
 
     vector_store = InMemoryVectorStore(embeddings)
-    vector_store.add_documents(docs)
+    try:
+        vector_store.add_documents(docs)
+    except Exception as e:
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                "Failed to embed documents for RAG (Gemini embeddings). "
+                "For local demo, try setting RAG_EMBED_BATCH_SIZE=5 (or 3) and retry. "
+                f"Root error: {type(e).__name__}"
+            ),
+        )
 
     with _CACHE_LOCK:
         _CACHE[cache_key] = (signature, vector_store)
