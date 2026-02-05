@@ -283,10 +283,11 @@ export default function TradeActionPage() {
       ) : null}
 
       <div className="grid grid-cols-1 2xl:grid-cols-[1fr,320px] gap-6 items-start">
-        <div className="flex flex-col xl:flex-row gap-6 items-start">
-          {/* Shipment Summary */}
-          <section className="relative w-full xl:w-[340px] rounded-2xl bg-sky-200/60 shadow-sm ring-1 ring-slate-200 px-6 pb-6 pt-14">
-            <PillTitle>Shipment Summary</PillTitle>
+        <div>
+          <div className="flex flex-col xl:flex-row gap-6 items-start">
+            {/* Shipment Summary */}
+            <section className="relative w-full xl:w-[340px] rounded-2xl bg-sky-200/60 shadow-sm ring-1 ring-slate-200 px-6 pb-6 pt-14">
+              <PillTitle>Shipment Summary</PillTitle>
 
             <div className="mt-2 space-y-3">
               <LabelRow label="Product" value={summary?.product || (loading ? 'Loading…' : '—')} />
@@ -303,11 +304,11 @@ export default function TradeActionPage() {
                     : 'No assessment selected'}
               </div>
             </div>
-          </section>
+            </section>
 
-          {/* Compliance Timeline */}
-          <section className="relative w-full xl:flex-1 min-w-0 rounded-2xl bg-sky-200/60 shadow-sm ring-1 ring-slate-200 px-8 pb-8 pt-14">
-            <PillTitle>Compliance Timeline</PillTitle>
+            {/* Compliance Timeline */}
+            <section className="relative w-full xl:flex-1 min-w-0 rounded-2xl bg-sky-200/60 shadow-sm ring-1 ring-slate-200 px-8 pb-8 pt-14">
+              <PillTitle>Compliance Timeline</PillTitle>
 
           <div className="relative mt-4">
             {/* Vertical line */}
@@ -385,11 +386,11 @@ export default function TradeActionPage() {
               </div>
             </div>
           </div>
+            </section>
+          </div>
 
-          </section>
-
-          {/* Upload / Invoice extraction */}
-          <section className="w-full xl:w-[360px] rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 px-6 py-6">
+          {/* Upload / Invoice extraction (below the top row) */}
+          <section className="mt-6 w-full rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 px-6 py-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="text-lg font-semibold text-slate-900">Upload Invoice Extraction</div>
@@ -424,25 +425,23 @@ export default function TradeActionPage() {
                   ) : null}
                 </div>
 
-                <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
                     <div className="text-xs font-semibold text-slate-600">Item</div>
                     <div className="mt-1 text-sm font-semibold text-slate-900 break-words">
                       {invoiceFields?.item_name || '—'}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
-                      <div className="text-xs font-semibold text-slate-600">Price</div>
-                      <div className="mt-1 text-sm font-semibold text-slate-900">
-                        {typeof invoiceFields?.price === 'number' ? invoiceFields.price : '—'}
-                      </div>
+                  <div className="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
+                    <div className="text-xs font-semibold text-slate-600">Price</div>
+                    <div className="mt-1 text-sm font-semibold text-slate-900">
+                      {typeof invoiceFields?.price === 'number' ? invoiceFields.price : '—'}
                     </div>
-                    <div className="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
-                      <div className="text-xs font-semibold text-slate-600">Country</div>
-                      <div className="mt-1 text-sm font-semibold text-slate-900 break-words">
-                        {invoiceFields?.country || '—'}
-                      </div>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
+                    <div className="text-xs font-semibold text-slate-600">Country</div>
+                    <div className="mt-1 text-sm font-semibold text-slate-900 break-words">
+                      {invoiceFields?.country || '—'}
                     </div>
                   </div>
                 </div>
