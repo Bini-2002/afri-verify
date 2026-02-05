@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import AppLayout from './layout/AppLayout.jsx'
 import {
   Paperclip,
   More,
   TickCircle,
   TickSquare,
+  Verify,
 } from 'iconsax-react'
 
 import { apiFetch } from '../lib/auth.js'
@@ -104,6 +105,7 @@ function StepNumber({ number, variant }) {
 
 export default function TradeActionPage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
   const assessmentIdFromUrl = searchParams.get('assessmentId')
 
   const [assessment, setAssessment] = useState(null)
@@ -376,13 +378,28 @@ export default function TradeActionPage() {
             {/* Step 4 */}
             <div className="relative flex gap-6">
               <div className="relative z-10 flex w-11 justify-center">
-                <StepNumber number={4} variant="idle" />
+                <StepNumber 
+                  number={4} 
+                  variant={summary?.status === 'eligible' ? 'active' : 'idle'} 
+                />
               </div>
               <div className="pt-1">
                 <div className="text-sm font-semibold text-slate-900">
-                  Certificate of Origin(CoO) Issurance
+                  Certificate of Origin (CoO) Issuance
                 </div>
-                <div className="mt-1 text-xs text-slate-600">pending</div>
+                <div className="mt-1 text-xs text-slate-600">
+                  {summary?.status === 'eligible' ? (
+                    <button
+                      onClick={() => navigate(`/app/certificate/${assessment?.id}`)}
+                      className="mt-2 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white shadow-sm ring-1 ring-indigo-500 hover:bg-indigo-700"
+                    >
+                      <Verify size={16} variant="Bold" className="text-indigo-200" />
+                      View Certificate
+                    </button>
+                  ) : (
+                    'Pending verification'
+                  )}
+                </div>
               </div>
             </div>
           </div>

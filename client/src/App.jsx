@@ -11,6 +11,7 @@ import TradeActionPage from './Components/TradeActionPage.jsx'
 import SettingsPage from './Components/SettingsPage.jsx'
 import OAuthCallbackPage from './Components/OAuthCallbackPage.jsx'
 import RequireAuth from './Components/RequireAuth.jsx'
+import CertificatePage from './Components/CertificatePage.jsx'
 
 export default function App() {
   return (
@@ -20,6 +21,15 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
+
+        <Route
+          path="/app/certificate/:assessmentId"
+          element={
+            <RequireAuth>
+              <CertificatePage />
+            </RequireAuth>
+          }
+        />
 
         <Route
           path="/app/dashboard"
