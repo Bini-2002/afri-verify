@@ -57,6 +57,7 @@ async def upload_document(
 
     # 2c. Invoice OCR + extraction (best-effort)
     invoice_keys = {"invoice", "commercial_invoice", "commercial invoice"}
+    invoice_processed = False
     if doc_type_norm in invoice_keys:
         try:
             from ..services.ocr_invoice import extract_text, parse_fields
@@ -80,6 +81,7 @@ async def upload_document(
                 db_doc.status = models.DocStatus.PENDING
 
             db.commit()
+            invoice_processed = True
 
             assessment = (
                 crud.get_assessment(db=db, user_id=current_user.id, assessment_id=assessment_id_norm)
@@ -144,6 +146,9 @@ async def upload_document(
     # 3. Trigger Zuri AI Verification (Simplified for Prototype)
     # In production, this should be a background task (Celery/Redis)
     try:
+        if invoice_processed:
+            return db_doc
+
         prompt = f"Analyze this {doc_type_norm}. Does it look like a valid trade document? Return YES or NO."
         _ = prompt  # placeholder to keep flow; file content upload not implemented
 
@@ -250,6 +255,69 @@ def ocr_document(
         extracted_text=extracted_text,
         fields=schemas.OcrExtractionFields(**fields),
     )
+
+
+@router.post("/{document_id}/index")
+def index_document_for_chat(
+    document_id: str,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """(Re)index a document into knowledge_chunks for RAG chat."""
+
+    from fastapi import HTTPException
+
+    doc = (
+        db.query(models.Document)
+        .filter(models.Document.id == document_id, models.Document.user_id == current_user.id)
+        .first()
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+    if not doc.file_path or not os.path.exists(doc.file_path):
+        raise HTTPException(status_code=404, detail="File not found on server")
+
+    rag_types = {
+        "afcfta_pdf",
+        "roo_reference",
+        "invoice",
+        "commercial_invoice",
+        "commercial invoice",
+        "supplier_declaration",
+        "direct_transport",
+        "bill_of_lading",
+    }
+    if (doc.doc_type or "").strip().lower() not in rag_types:
+        raise HTTPException(status_code=400, detail="This document type is not indexed for chat")
+
+    from ..services.rag import chunk_text
+    from ..services.ocr_invoice import extract_text
+
+    rows = []
+    chunk_index = 0
+    if (doc.file_name or "").lower().endswith(".pdf"):
+        reader = PdfReader(doc.file_path)
+        for i, page in enumerate(reader.pages):
+            text = page.extract_text() or ""
+            text = " ".join(text.split())
+            for chunk in chunk_text(text):
+                rows.append((i + 1, chunk_index, chunk))
+                chunk_index += 1
+    else:
+        extracted_text, _provider = extract_text(doc.file_path)
+        extracted_text = " ".join((extracted_text or "").split())
+        for chunk in chunk_text(extracted_text):
+            rows.append((None, chunk_index, chunk))
+            chunk_index += 1
+
+    crud.replace_knowledge_chunks_for_document(
+        db,
+        user_id=current_user.id,
+        document_id=doc.id,
+        chunks=rows,
+    )
+
+    return {"document_id": doc.id, "chunks_indexed": len(rows)}
 
 
 @router.post("/chat")

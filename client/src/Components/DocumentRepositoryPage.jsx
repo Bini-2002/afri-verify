@@ -91,6 +91,7 @@ export default function DocumentRepositoryPage() {
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [detailsDoc, setDetailsDoc] = useState(null)
   const [ocrBusy, setOcrBusy] = useState(false)
+  const [indexBusy, setIndexBusy] = useState(false)
 
   const [filterType, setFilterType] = useState('all')
   const [search, setSearch] = useState('')
@@ -274,6 +275,20 @@ export default function DocumentRepositoryPage() {
     }
   }
 
+  async function indexDetailsDocForChat() {
+    if (!detailsDoc?.id) return
+    setError('')
+    setIndexBusy(true)
+    try {
+      await apiFetch(`/documents/${encodeURIComponent(detailsDoc.id)}/index`, { method: 'POST' })
+      await refreshDocuments()
+    } catch (e) {
+      setError(e?.message || 'Indexing failed')
+    } finally {
+      setIndexBusy(false)
+    }
+  }
+
   async function submitUpload() {
     setError('')
     if (!uploadFile) {
@@ -309,7 +324,7 @@ export default function DocumentRepositoryPage() {
       <Modal
         open={detailsOpen}
         title="Document Details"
-        onClose={() => (ocrBusy ? null : (setDetailsOpen(false), setDetailsDoc(null)))}
+        onClose={() => (ocrBusy || indexBusy ? null : (setDetailsOpen(false), setDetailsDoc(null)))}
       >
         {!detailsDoc ? (
           <div className="text-sm font-semibold text-slate-700">No document selected.</div>
@@ -331,6 +346,20 @@ export default function DocumentRepositoryPage() {
               <div>
                 <div className="text-xs font-semibold text-slate-600">Uploaded</div>
                 <div className="mt-1 text-sm font-semibold text-slate-900">{formatDate(detailsDoc.uploaded_at)}</div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={indexDetailsDocForChat}
+                disabled={indexBusy}
+                className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 disabled:opacity-60"
+              >
+                {indexBusy ? 'Indexing…' : 'Index for Chat'}
+              </button>
+              <div className="text-xs font-semibold text-slate-600">
+                Use this after upload so AI chat can read it.
               </div>
             </div>
 
@@ -415,6 +444,7 @@ export default function DocumentRepositoryPage() {
               <option value="direct_transport">Direct Transport</option>
               <option value="bill_of_lading">Bill of Lading</option>
               <option value="afcfta_pdf">AfCFTA PDF (RAG)</option>
+              <option value="roo_reference">RoO Guide / Reference PDF (RAG)</option>
               <option value="other">Other</option>
             </Select>
             <div className="mt-2 text-xs text-slate-600">

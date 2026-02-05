@@ -29,6 +29,8 @@ def rag_chat(
     if not api_key:
         raise HTTPException(status_code=500, detail="GEMINI_API_KEY is not set on the server")
 
+    genai.configure(api_key=api_key)
+
     rows = crud.get_rag_knowledge_chunks_for_user(
         db,
         user_id=current_user.id,
