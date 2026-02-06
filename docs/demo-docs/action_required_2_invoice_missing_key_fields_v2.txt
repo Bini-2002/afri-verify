@@ -1,0 +1,25 @@
+COMMERCIAL INVOICE (ACTION REQUIRED CASE – INCOMPLETE FOR VERIFICATION)
+
+Invoice Reference: INV-ACTION-REQUIRED
+Date: Six February Two Thousand Twenty-Six
+Bill To: Cape Town Cosmetics (Pty) Ltd.
+Ship To: Cape Town, South Africa
+
+Invoice Notes: This invoice is incomplete and should trigger Action Required.
+
+Total Amount: Fifty Thousand United States Dollars
+Amount Due: Fifty Thousand United States Dollars
+
+Invoice Item Description: Shea Butter Blend (Cosmetic Grade)
+
+Invoice Missing Fields (intentional for demo):
+- Invoice HS Code is missing
+- Invoice Country of Origin statement is missing
+- Invoice numeric totals (digits) are missing
+- Invoice quantity and unit price breakdown are missing
+
+Signed:
+  Name: ____________________
+  Title: ____________________
+  Signature: ____________________
+  Date: Six February Two Thousand Twenty-Six
