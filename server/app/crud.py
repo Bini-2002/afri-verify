@@ -92,6 +92,25 @@ def create_assessment(db: Session, assessment: schemas.AssessmentCreate, user_id
     return db_assessment
 
 
+def create_draft_assessment(db: Session, *, user_id: str):
+    # OCR-first: create a placeholder assessment so documents can be attached.
+    # VA is intentionally unknown until documents are processed.
+    db_assessment = models.ComplianceAssessment(
+        user_id=user_id,
+        product_name="Pending OCR",
+        hs_code="—",
+        destination_country="—",
+        ex_works_price=0.0,
+        nom_value=0.0,
+        va_percentage=None,
+        status=models.AssessmentStatus.ACTION_REQUIRED,
+    )
+    db.add(db_assessment)
+    db.commit()
+    db.refresh(db_assessment)
+    return db_assessment
+
+
 def get_user_assessments(db: Session, user_id: str):
     return (
         db.query(models.ComplianceAssessment)
@@ -113,9 +132,9 @@ def get_assessment(db: Session, user_id: str, assessment_id: str):
 
 
 def _recompute_assessment_status(assessment: models.ComplianceAssessment) -> None:
-    # Keep VA-based ineligible as terminal in MVP.
-    if (assessment.va_percentage or 0.0) < 40:
-        assessment.status = models.AssessmentStatus.INELIGIBLE
+    # OCR-first flow: VA may be unknown until evidence is processed.
+    if assessment.va_percentage is None:
+        assessment.status = models.AssessmentStatus.ACTION_REQUIRED
         return
 
     required = [
@@ -123,6 +142,16 @@ def _recompute_assessment_status(assessment: models.ComplianceAssessment) -> Non
         assessment.docs_invoice_status,
         assessment.docs_direct_transport_status,
     ]
+
+    # Any disqualifying document -> ineligible (technical rejection).
+    if any(s == models.DocStatus.REJECTED for s in required):
+        assessment.status = models.AssessmentStatus.INELIGIBLE
+        return
+
+    # Keep VA-based ineligible as terminal in MVP.
+    if float(assessment.va_percentage) < 40:
+        assessment.status = models.AssessmentStatus.INELIGIBLE
+        return
     if all(s == models.DocStatus.VERIFIED for s in required):
         assessment.status = models.AssessmentStatus.ELIGIBLE
     else:

@@ -49,7 +49,7 @@ class AssessmentCreate(BaseModel):
 
 class AssessmentResponse(AssessmentCreate):
     id: str
-    va_percentage: float
+    va_percentage: Optional[float] = None
     status: str
     docs_supplier_declaration_status: str
     docs_invoice_status: str
@@ -97,6 +97,11 @@ class OcrExtractionFields(BaseModel):
     item_name: Optional[str] = None
     price: Optional[float] = None
     country: Optional[str] = None
+    ex_works_price: Optional[float] = None
+    nom_value: Optional[float] = None
+    materials_cost: Optional[float] = None
+    labor_cost: Optional[float] = None
+    overhead_cost: Optional[float] = None
 
 
 class OcrResponse(BaseModel):

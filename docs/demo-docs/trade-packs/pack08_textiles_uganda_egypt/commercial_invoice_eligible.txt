@@ -1,0 +1,29 @@
+COMMERCIAL INVOICE
+
+Invoice No: AV-INV-0008
+Date: 2026-02-06
+Exporter: KAMPALA TEXTILES LTD
+Exporter Address: Kampala, Uganda
+Importer: NILE APPAREL EGYPT
+Importer Address: Cairo, Egypt
+Incoterms: EXW
+Currency: USD
+
+Goods Description
+Cotton T-Shirts (100% cotton)
+
+Quantity: 1000 units
+Unit Price: 10.00
+Invoice Total: 10,000.00
+
+Country of Origin: Uganda
+
+Cost Breakdown (for AfCFTA Rules of Origin)
+Ex-Works Price (EXW): 10,000.00
+Non-Originating Materials (NOM): 5,500.00
+Materials Cost: 4,200.00
+Labor Cost: 900.00
+Overhead Cost: 400.00
+
+Notes:
+- EXW and NOM provided for automated compliance assessment.

@@ -1,0 +1,13 @@
+SUPPLIER DECLARATION
+
+Supplier: KENYA HIGHLAND COFFEE CO. (Kenya)
+Buyer: ALGIERS ROASTERS (Algeria)
+Product: Roasted Coffee Beans
+
+Declaration:
+We declare that the goods supplied under Invoice AV-INV-0009 are produced in Kenya.
+
+Signed: ____________________
+Name: David Ochieng
+Title: Export Compliance
+Date: 2026-02-06

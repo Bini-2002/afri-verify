@@ -1,0 +1,28 @@
+COMMERCIAL INVOICE
+
+Invoice No: AV-INV-0009
+Date: 2026-02-06
+Exporter: KENYA HIGHLAND COFFEE CO.
+Exporter Address: Nairobi, Kenya
+Importer: ALGIERS ROASTERS
+Importer Address: Algiers, Algeria
+Incoterms: EXW
+Currency: USD
+
+Goods Description
+Roasted Coffee Beans
+
+Quantity: 300 bags
+Unit Price: 25.00
+Invoice Total: 7,500.00
+
+Country of Origin: Kenya
+
+Cost Breakdown (for AfCFTA Rules of Origin)
+Non-Originating Materials (NOM): 4,200.00
+Materials Cost: 3,600.00
+Labor Cost: 550.00
+Overhead Cost: 250.00
+
+NOTE:
+- Ex-Works Price (EXW) line is missing. System should return Action Required.

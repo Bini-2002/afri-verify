@@ -21,10 +21,30 @@ def verify_invoice(file_path: str) -> tuple[models.DocStatus, dict[str, Any], st
     fields = parse_fields(extracted_text)
 
     has_text = bool(extracted_text and extracted_text.strip())
-    ok = bool(fields.get("country")) and (fields.get("price") is not None)
+    has_origin = bool(fields.get("country"))
+    has_total = fields.get("price") is not None
+
+    exw = fields.get("ex_works_price")
+    nom = fields.get("nom_value")
+
+    # Compute VA% deterministically from EXW and NOM.
+    va = None
+    if (exw is not None) and (nom is not None) and exw > 0:
+        try:
+            fields["va_percentage"] = max(0.0, min(100.0, ((float(exw) - float(nom)) / float(exw)) * 100.0))
+            va = fields.get("va_percentage")
+        except Exception:
+            pass
+
+    has_cost_breakdown = (exw is not None) and (nom is not None) and (exw > 0)
+    ok = has_origin and has_total and has_cost_breakdown
 
     status = models.DocStatus.VERIFIED if (has_text and ok) else models.DocStatus.PENDING
-    note = "Invoice verified (total + origin extracted)." if status == models.DocStatus.VERIFIED else "Invoice needs numeric total and country of origin."
+    note = (
+        "Invoice accepted (origin + total + cost breakdown extracted)."
+        if status == models.DocStatus.VERIFIED
+        else "Invoice needs Country of Origin, Invoice Total, and Cost Breakdown (EXW + NOM)."
+    )
     return status, fields, provider, note
 
 

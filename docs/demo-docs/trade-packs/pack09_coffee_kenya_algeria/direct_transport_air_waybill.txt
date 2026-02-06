@@ -1,0 +1,13 @@
+AIR WAYBILL
+
+Carrier: Sahara Air Cargo
+AWB No: SAC-99009
+
+Airport of Departure: Jomo Kenyatta International (Nairobi)
+Airport of Destination: Houari Boumediene (Algiers)
+
+Routing:
+- Direct air carriage Nairobi -> Algiers
+- Under customs control
+
+Date of Shipment: 2026-02-07

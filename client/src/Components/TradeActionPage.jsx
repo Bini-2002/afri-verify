@@ -270,7 +270,13 @@ export default function TradeActionPage() {
               return apiFetch(`/assessments/${encodeURIComponent(assessmentIdFromUrl)}`)
             }
             const list = await apiFetch('/assessments/my-assessments')
-            if (!Array.isArray(list) || list.length === 0) return null
+            if (!Array.isArray(list) || list.length === 0) {
+              const draft = await apiFetch('/assessments/draft', { method: 'POST' })
+              if (draft?.id) {
+                setSearchParams({ assessmentId: draft.id }, { replace: true })
+              }
+              return draft
+            }
             const newest = list[0]
             if (newest?.id) {
               setSearchParams({ assessmentId: newest.id }, { replace: true })
@@ -379,7 +385,7 @@ export default function TradeActionPage() {
     if (!assessment) return null
     const home = profile?.home_country || 'Origin'
     const route = `${home} → ${assessment.destination_country}`
-    const va = Math.round((assessment.va_percentage || 0) * 10) / 10
+    const va = typeof assessment.va_percentage === 'number' ? Math.round(assessment.va_percentage * 10) / 10 : null
     return {
       product: assessment.product_name,
       route,
@@ -396,6 +402,8 @@ export default function TradeActionPage() {
     if (s === 'action_required' || s === 'action required') return 'bg-red-300 ring-1 ring-red-400/50'
     return 'bg-sky-200 ring-1 ring-sky-300/50'
   }, [summary])
+
+  const hasOcrVa = typeof summary?.va === 'number'
 
   return (
     <AppLayout active="trade" title="Trade Action">
@@ -471,14 +479,22 @@ export default function TradeActionPage() {
                 {/* Step 1 */}
                 <div className="relative flex gap-6 pb-6">
                   <div className="relative z-10 flex w-11 justify-center">
-                    <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-green-400 shadow-sm ring-1 ring-green-500/40">
-                      <TickCircle size={22} variant="Bold" color="#0f172a" />
-                    </div>
+                    {hasOcrVa ? (
+                      <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-green-400 shadow-sm ring-1 ring-green-500/40">
+                        <TickCircle size={22} variant="Bold" color="#0f172a" />
+                      </div>
+                    ) : (
+                      <StepNumber number={1} variant="idle" />
+                    )}
                   </div>
                   <div className="pt-1">
-                    <div className="text-sm font-semibold text-slate-900">Origin Criteria Meet</div>
+                    <div className="text-sm font-semibold text-slate-900">OCR Final Assessment</div>
                     <div className="mt-1 text-xs text-slate-600">
-                      {summary ? `Calculation Verified | VA=${summary.va}%` : 'Calculation pending'}
+                      {summary
+                        ? hasOcrVa
+                          ? `Cost Breakdown extracted | VA=${summary.va}%`
+                          : 'Awaiting invoice cost breakdown (EXW + NOM)'
+                        : 'Pending'}
                     </div>
                   </div>
                 </div>
@@ -621,6 +637,13 @@ export default function TradeActionPage() {
                                       {!invoiceFields?.country ? 'Country of Origin' : null}
                                       {!invoiceFields?.country && typeof invoiceFields?.price !== 'number' ? ' + ' : null}
                                       {typeof invoiceFields?.price !== 'number' ? 'Invoice Total' : null}
+                                      {((!invoiceFields?.country || typeof invoiceFields?.price !== 'number') &&
+                                        (typeof invoiceFields?.ex_works_price !== 'number' || typeof invoiceFields?.nom_value !== 'number'))
+                                        ? ' + '
+                                        : null}
+                                      {typeof invoiceFields?.ex_works_price !== 'number' || typeof invoiceFields?.nom_value !== 'number'
+                                        ? 'Cost Breakdown (EXW + NOM)'
+                                        : null}
                                     </div>
                                   ) : null}
                                 </div>
@@ -635,79 +658,6 @@ export default function TradeActionPage() {
               </div>
             </section>
           </div>
-
-          {/* Upload / Invoice extraction (below the top row) */}
-          <section className="mt-6 w-full rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 px-6 py-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="text-lg font-semibold text-slate-900">Upload Invoice Extraction</div>
-                <div className="mt-1 text-xs font-semibold text-slate-600">
-                  {latestInvoice ? `Latest: ${latestInvoice.file_name}` : 'Upload an invoice to extract fields'}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => openFilePicker('invoice')}
-                disabled={uploading.invoice}
-                className={
-                  'inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm ring-1 ' +
-                  (uploading.invoice
-                    ? 'bg-slate-100 text-slate-500 ring-slate-200'
-                    : 'bg-amber-100 text-slate-900 ring-amber-200 hover:bg-amber-200')
-                }
-              >
-                <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-white ring-1 ring-amber-200">
-                  <Paperclip size={12} variant="Linear" color="#0f172a" />
-                </span>
-                {uploading.invoice ? 'Uploading…' : 'Upload'}
-              </button>
-            </div>
-
-            {latestInvoice ? (
-              <div className="mt-4 space-y-3">
-                <div className="text-xs font-semibold text-slate-700">
-                  Status: <span className="text-slate-900">{latestInvoice.status || '—'}</span>
-                  {invoiceMetadata?.ocr_provider ? (
-                    <span className="ml-2 text-slate-600">(Provider: {invoiceMetadata.ocr_provider})</span>
-                  ) : null}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div className="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
-                    <div className="text-xs font-semibold text-slate-600">Item</div>
-                    <div className="mt-1 text-sm font-semibold text-slate-900 break-words">
-                      {invoiceFields?.item_name || '—'}
-                    </div>
-                  </div>
-                  <div className="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
-                    <div className="text-xs font-semibold text-slate-600">Price</div>
-                    <div className="mt-1 text-sm font-semibold text-slate-900">
-                      {typeof invoiceFields?.price === 'number' ? invoiceFields.price : '—'}
-                    </div>
-                  </div>
-                  <div className="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
-                    <div className="text-xs font-semibold text-slate-600">Country</div>
-                    <div className="mt-1 text-sm font-semibold text-slate-900 break-words">
-                      {invoiceFields?.country || '—'}
-                    </div>
-                  </div>
-                </div>
-
-                {invoiceMetadata?.extracted_text_excerpt ? (
-                  <div>
-                    <div className="text-xs font-semibold text-slate-700">Extracted text (excerpt)</div>
-                    <pre className="mt-2 max-h-48 overflow-auto rounded-xl bg-slate-50 p-3 text-xs text-slate-800 ring-1 ring-slate-200 whitespace-pre-wrap">
-                      {invoiceMetadata.extracted_text_excerpt}
-                    </pre>
-                  </div>
-                ) : null}
-              </div>
-            ) : (
-              <div className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-slate-700 ring-1 ring-amber-200">
-                Upload an invoice (image or PDF). If it’s an image, make sure Tesseract is installed on the server.
-              </div>
-            )}
-          </section>
         </div>
 
         {/* Zuri Guidance (no prompts) */}

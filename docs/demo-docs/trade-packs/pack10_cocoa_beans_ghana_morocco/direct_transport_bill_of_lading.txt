@@ -1,0 +1,14 @@
+BILL OF LADING (SEA)
+
+Carrier: Atlantic Maghreb Lines
+B/L No: AML-SEA-0010
+Vessel: MV NORTH ATLANTIC
+
+Port of Loading: Tema, Ghana
+Port of Discharge: Casablanca, Morocco
+
+Routing:
+- Direct sea carriage Tema -> Casablanca
+- Under customs control
+
+Date of Shipment: 2026-02-07

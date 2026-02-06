@@ -15,8 +15,9 @@ These packs are designed to stress-test the MVP eligibility flow using different
 7. If eligible, open the certificate.
 
 Notes:
-- Your system marks an invoice `VERIFIED` only when it extracts **both** a numeric total and a country of origin.
+- Your system marks an invoice `VERIFIED` only when it extracts **Country of Origin**, **Invoice Total**, and **Cost Breakdown (EXW + NOM)**.
 - If VA < 40%, the assessment is `INELIGIBLE` even with perfect documents.
+- If any required document is `REJECTED` (technical issue), the assessment is `INELIGIBLE`.
 - Chat is optional and gated to avoid consuming limited prompts.
 
 ---
@@ -112,3 +113,40 @@ Notes:
 - Click **Finalize with Zuri AI** again.
 - Expected:
   - Final decision: **Eligible** → Certificate available.
+
+## Pack 08 — Textiles (Eligible via Cost Breakdown)
+**Goal:** Eligible flow using OCR-extracted Cost Breakdown (EXW + NOM). VA% is computed by the system.
+- RoO Calculator: (optional — can create any assessment, OCR values overwrite during finalize)
+- Upload files:
+  - `pack08_textiles_uganda_egypt/supplier_declaration.txt`
+  - `pack08_textiles_uganda_egypt/direct_transport_bill_of_lading.txt`
+  - `pack08_textiles_uganda_egypt/commercial_invoice_eligible.txt`
+- Expected:
+  - Final decision: **Eligible** → Certificate available.
+
+## Pack 09 — Coffee (Action Required: EXW missing)
+**Goal:** Invoice is missing Ex-Works Price (EXW) line; system cannot compute VA%.
+- Upload files:
+  - `pack09_coffee_kenya_algeria/supplier_declaration.txt`
+  - `pack09_coffee_kenya_algeria/direct_transport_air_waybill.txt`
+  - `pack09_coffee_kenya_algeria/commercial_invoice_missing_exw.txt`
+- Expected:
+  - Final decision: **Action Required** (invoice pending; cost breakdown incomplete).
+
+## Pack 10 — Cocoa Beans (Action Required: NOM missing)
+**Goal:** Invoice is missing Non-Originating Materials (NOM) line.
+- Upload files:
+  - `pack10_cocoa_beans_ghana_morocco/supplier_declaration.txt`
+  - `pack10_cocoa_beans_ghana_morocco/direct_transport_bill_of_lading.txt`
+  - `pack10_cocoa_beans_ghana_morocco/commercial_invoice_missing_nom.txt`
+- Expected:
+  - Final decision: **Action Required**.
+
+## Pack 11 — Solar Inverters (Ineligible: technical rejection)
+**Goal:** Direct transport evidence contains a transshipment issue; transport is REJECTED.
+- Upload files:
+  - `pack11_solar_inverters_tanzania_rwanda/supplier_declaration.txt`
+  - `pack11_solar_inverters_tanzania_rwanda/direct_transport_transshipment_issue.txt`
+  - `pack11_solar_inverters_tanzania_rwanda/commercial_invoice_ok_but_technical_issue.txt`
+- Expected:
+  - Final decision: **Ineligible**.

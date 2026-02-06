@@ -1,0 +1,29 @@
+COMMERCIAL INVOICE
+
+Invoice No: AV-INV-0011
+Date: 2026-02-06
+Exporter: DAR SOLAR SUPPLY
+Exporter Address: Dar es Salaam, Tanzania
+Importer: KIGALI ENERGY LTD
+Importer Address: Kigali, Rwanda
+Incoterms: EXW
+Currency: USD
+
+Goods Description
+Solar Inverters (Off-grid)
+
+Quantity: 50 units
+Unit Price: 220.00
+Invoice Total: 11,000.00
+
+Country of Origin: Tanzania
+
+Cost Breakdown (for AfCFTA Rules of Origin)
+Ex-Works Price (EXW): 11,000.00
+Non-Originating Materials (NOM): 6,000.00
+Materials Cost: 5,200.00
+Labor Cost: 500.00
+Overhead Cost: 300.00
+
+Notes:
+- Cost breakdown provided for automated assessment.

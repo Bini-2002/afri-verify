@@ -1,0 +1,14 @@
+SUPPLIER DECLARATION
+
+Supplier: KAMPALA TEXTILES LTD (Uganda)
+Buyer: NILE APPAREL EGYPT (Egypt)
+Product: Cotton T-Shirts
+
+Declaration:
+We declare that the goods supplied under Invoice AV-INV-0008 are produced in Uganda.
+The product is manufactured locally and meets AfCFTA originating requirements.
+
+Signed: ____________________
+Name: Sarah Namugga
+Title: Compliance Officer
+Date: 2026-02-06

@@ -70,9 +70,22 @@ def parse_fields(extracted_text: str) -> dict[str, Any]:
     """Best-effort invoice field extraction.
 
     Contract minimum: item_name, price, country.
+    Extended: ex_works_price, nom_value, va_percentage (+ optional breakdowns).
     """
 
     text = extracted_text or ""
+
+    def _to_float(s: str) -> Optional[float]:
+        try:
+            return float(str(s).replace(",", "").strip())
+        except Exception:
+            return None
+
+    def _extract_money(pattern: str) -> Optional[float]:
+        m2 = re.search(pattern, text, re.IGNORECASE)
+        if not m2:
+            return None
+        return _to_float(m2.group(1))
 
     # Country of origin
     country: Optional[str] = None
@@ -142,4 +155,10 @@ def parse_fields(extracted_text: str) -> dict[str, Any]:
         "item_name": item_name,
         "price": price,
         "country": country,
+        # Cost breakdown (OCR-driven final assessment)
+        "ex_works_price": _extract_money(r"\b(?:ex\s*[- ]?works|exw)\s*(?:price|value)?\s*[:\-]\s*([0-9][0-9,]*\.?[0-9]{0,2})"),
+        "nom_value": _extract_money(r"\b(?:non\s*[- ]?originating\s*materials?|nom)\s*(?:value|cost)?\s*[:\-]\s*([0-9][0-9,]*\.?[0-9]{0,2})"),
+        "materials_cost": _extract_money(r"\bmaterials?\s*cost\s*[:\-]\s*([0-9][0-9,]*\.?[0-9]{0,2})"),
+        "labor_cost": _extract_money(r"\b(?:labou?r|labor)\s*cost\s*[:\-]\s*([0-9][0-9,]*\.?[0-9]{0,2})"),
+        "overhead_cost": _extract_money(r"\boverhead\s*cost\s*[:\-]\s*([0-9][0-9,]*\.?[0-9]{0,2})"),
     }

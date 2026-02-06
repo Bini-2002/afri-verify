@@ -13,6 +13,14 @@ router = APIRouter(
 )
 
 
+@router.post("/draft", response_model=schemas.AssessmentResponse)
+def create_draft_assessment(
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    return crud.create_draft_assessment(db=db, user_id=current_user.id)
+
+
 @router.post("/calculate", response_model=schemas.AssessmentResponse)
 def calculate_compliance(
     assessment: schemas.AssessmentCreate,
@@ -172,6 +180,33 @@ def process_documents(
         invoice_doc.ai_metadata = build_ai_metadata(provider=provider, fields=fields, note=note, extracted_text=text)
         db.add(invoice_doc)
         crud.apply_document_to_assessment_tracker(db=db, assessment=assessment, doc_type="invoice", doc_status=status)
+
+        # OCR-driven assessment values (Cost Breakdown)
+        try:
+            exw = fields.get("ex_works_price")
+            nom = fields.get("nom_value")
+            va = None
+
+            if exw is not None:
+                assessment.ex_works_price = float(exw)
+            if nom is not None:
+                assessment.nom_value = float(nom)
+
+            if (exw is not None) and (nom is not None) and float(exw) > 0:
+                va = max(0.0, min(100.0, ((float(exw) - float(nom)) / float(exw)) * 100.0))
+                assessment.va_percentage = float(va)
+
+            # Optional breakdowns (only set when present)
+            if fields.get("materials_cost") is not None:
+                assessment.materials_cost = float(fields.get("materials_cost"))
+            if fields.get("labor_cost") is not None:
+                assessment.labor_cost = float(fields.get("labor_cost"))
+            if fields.get("overhead_cost") is not None:
+                assessment.overhead_cost = float(fields.get("overhead_cost"))
+
+            db.add(assessment)
+        except Exception:
+            pass
         results.append(
             schemas.ProcessedDocumentResult(
                 doc_type="invoice",

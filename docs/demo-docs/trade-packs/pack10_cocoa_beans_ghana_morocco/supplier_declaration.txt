@@ -1,0 +1,13 @@
+SUPPLIER DECLARATION
+
+Supplier: AKWAABA COCOA EXPORTS (Ghana)
+Buyer: CASABLANCA CHOCOLATIER (Morocco)
+Product: Cocoa Beans
+
+Declaration:
+We certify that the goods supplied under Invoice AV-INV-0010 are produced in Ghana.
+
+Signed: ____________________
+Name: Kwame Boateng
+Title: Quality & Compliance
+Date: 2026-02-06

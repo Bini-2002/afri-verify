@@ -32,6 +32,19 @@ async def upload_document(
     current_user: models.User = Depends(get_current_user),
 ):
     doc_type_norm = (doc_type or "").strip().lower()
+    # Only allow the 3 evidence doc types for end-users.
+    # Normalize common invoice labels to "invoice".
+    if doc_type_norm in ("commercial_invoice", "commercial invoice"):
+        doc_type_norm = "invoice"
+
+    allowed_user_types = {"supplier_declaration", "direct_transport", "invoice"}
+    if doc_type_norm not in allowed_user_types:
+        from fastapi import HTTPException
+
+        raise HTTPException(
+            status_code=400,
+            detail="Only these document types are supported: supplier_declaration, direct_transport, invoice.",
+        )
     assessment_id_norm = (assessment_id or "").strip() or None
 
     # 1. Save File Locally
@@ -68,13 +81,17 @@ async def upload_document(
                 }
             )
 
-            # Mark VERIFIED only if we extracted something meaningful.
+            # Mark VERIFIED only if we extracted something meaningful AND the
+            # compliance-critical fields are present (origin + total + cost breakdown).
             extracted_any = bool(extracted_text and extracted_text.strip())
-            # For the demo, an invoice is only considered VERIFIED if key compliance fields
-            # are present (amount + origin country). Missing either should remain PENDING
-            # to support Action Required remediation flows.
-            extracted_key_fields = bool(fields.get("country")) and (fields.get("price") is not None)
-            if extracted_any and extracted_key_fields:
+            extracted_origin_and_total = bool(fields.get("country")) and (fields.get("price") is not None)
+            extracted_cost_breakdown = (
+                (fields.get("ex_works_price") is not None)
+                and (fields.get("nom_value") is not None)
+                and (float(fields.get("ex_works_price") or 0) > 0)
+            )
+
+            if extracted_any and extracted_origin_and_total and extracted_cost_breakdown:
                 db_doc.status = models.DocStatus.VERIFIED
             else:
                 db_doc.status = models.DocStatus.PENDING
