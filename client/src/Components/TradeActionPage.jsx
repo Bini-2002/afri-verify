@@ -111,20 +111,24 @@ function CheckItem({ status, hasUpload, label, onUpload, busy }) {
   const isPending = normalized === 'pending'
   const isRejected = normalized === 'rejected'
 
+  /* FIX: Only show "Pending" style if there is an actual upload (hasUpload),
+     ignoring the default "pending" status from the backend which is set on creation. */
+  const showPending = !isVerified && !isRejected && hasUpload
+
   const boxClass = isVerified
     ? 'bg-indigo-500 ring-indigo-600/20'
     : isRejected
       ? 'bg-red-300 ring-red-400/40'
-      : isPending || hasUpload
+      : showPending
         ? 'bg-amber-200 ring-amber-300/50'
         : 'bg-white ring-slate-300'
 
   const statusLabel = isVerified
-    ? 'Verified'
+    ? 'Accepted'
     : isRejected
       ? 'Rejected'
-      : isPending || hasUpload
-        ? 'Pending'
+      : showPending
+        ? 'Uploaded — awaiting acceptance'
         : 'Not uploaded'
 
   return (
@@ -138,8 +142,8 @@ function CheckItem({ status, hasUpload, label, onUpload, busy }) {
         >
           {isVerified ? (
             <TickSquare size={18} variant="Bold" color="#ffffff" />
-          ) : isPending || hasUpload ? (
-            <TickCircle size={18} variant="Bold" color="#0f172a" />
+          ) : showPending ? (
+            <span className="inline-flex h-2.5 w-2.5 rounded-full bg-slate-900/70" />
           ) : null}
         </span>
         <div>
@@ -324,9 +328,9 @@ export default function TradeActionPage() {
     try {
       // Keep user on this page; show a professional “processing” moment.
       await new Promise((r) => setTimeout(r, 700))
-      const res = await apiFetch(`/assessments/${encodeURIComponent(assessment.id)}/finalize`, { method: 'POST' })
+      const res = await apiFetch(`/assessments/${encodeURIComponent(assessment.id)}/process-documents`, { method: 'POST' })
       await new Promise((r) => setTimeout(r, 900))
-      setAssessment(res)
+      setAssessment(res?.assessment || res)
 
       const docs = await apiFetch('/documents/')
       setDocuments(Array.isArray(docs) ? docs : [])
@@ -336,7 +340,7 @@ export default function TradeActionPage() {
         step4Ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 50)
     } catch (e) {
-      setFinalizeError(e?.message || 'Final AI check failed')
+      setFinalizeError(e?.message || 'Final evidence processing failed')
     } finally {
       setFinalizing(false)
     }
@@ -439,181 +443,196 @@ export default function TradeActionPage() {
             <section className="relative w-full xl:w-[340px] rounded-2xl bg-sky-200/60 shadow-sm ring-1 ring-slate-200 px-6 pb-6 pt-14">
               <PillTitle>Shipment Summary</PillTitle>
 
-            <div className="mt-2 space-y-3">
-              <LabelRow label="Product" value={summary?.product || (loading ? 'Loading…' : '—')} />
-              <LabelRow label="Route" value={summary?.route || (loading ? 'Loading…' : '—')} />
-              <LabelRow label="Protocol" value={summary?.protocol || (loading ? 'Loading…' : '—')} />
-            </div>
-
-            <div className="mt-6 flex justify-center">
-              <div className={`rounded-full px-6 py-2 text-sm font-semibold text-slate-900 shadow-sm ${statusPillClass}`}>
-                {summary
-                  ? `${summary.status.toUpperCase()} (VA=${summary.va}%)`
-                  : loading
-                    ? 'Loading…'
-                    : 'No assessment selected'}
+              <div className="mt-2 space-y-3">
+                <LabelRow label="Product" value={summary?.product || (loading ? 'Loading…' : '—')} />
+                <LabelRow label="Route" value={summary?.route || (loading ? 'Loading…' : '—')} />
+                <LabelRow label="Protocol" value={summary?.protocol || (loading ? 'Loading…' : '—')} />
               </div>
-            </div>
+
+              <div className="mt-6 flex justify-center">
+                <div className={`rounded-full px-6 py-2 text-sm font-semibold text-slate-900 shadow-sm ${statusPillClass}`}>
+                  {summary
+                    ? `${summary.status.toUpperCase()} (VA=${summary.va}%)`
+                    : loading
+                      ? 'Loading…'
+                      : 'No assessment selected'}
+                </div>
+              </div>
             </section>
 
             {/* Compliance Timeline */}
             <section className="relative w-full xl:flex-1 min-w-0 rounded-2xl bg-sky-200/60 shadow-sm ring-1 ring-slate-200 px-8 pb-8 pt-14">
               <PillTitle>Compliance Timeline</PillTitle>
 
-          <div className="relative mt-4">
-            {/* Vertical line */}
-            <div className="absolute left-5 top-3 bottom-3 w-[3px] rounded-full bg-indigo-500/70" aria-hidden="true" />
+              <div className="relative mt-4">
+                {/* Vertical line */}
+                <div className="absolute left-5 top-3 bottom-3 w-[3px] rounded-full bg-indigo-500/70" aria-hidden="true" />
 
-            {/* Step 1 */}
-            <div className="relative flex gap-6 pb-6">
-              <div className="relative z-10 flex w-11 justify-center">
-                <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-green-400 shadow-sm ring-1 ring-green-500/40">
-                  <TickCircle size={22} variant="Bold" color="#0f172a" />
-                </div>
-              </div>
-              <div className="pt-1">
-                <div className="text-sm font-semibold text-slate-900">Origin Criteria Meet</div>
-                <div className="mt-1 text-xs text-slate-600">
-                  {summary ? `Calculation Verified | VA=${summary.va}%` : 'Calculation pending'}
-                </div>
-              </div>
-            </div>
-
-            {/* Step 2 */}
-            <div className="relative flex gap-6 pb-8">
-              <div className="relative z-10 flex w-11 justify-center">
-                <StepNumber number={2} variant="active" />
-              </div>
-              <div className="flex-1 pt-1">
-                <div className="text-sm font-semibold text-slate-900">
-                  Evidence Upload and Verification
-                </div>
-
-                <div className="mt-4 space-y-3">
-                  <CheckItem
-                    status={docStatuses.supplier_declaration}
-                    hasUpload={uploadedForAssessment.supplier_declaration}
-                    label="Supplier Declaration"
-                    busy={uploading.supplier_declaration}
-                    onUpload={() => openFilePicker('supplier_declaration')}
-                  />
-                  <CheckItem
-                    status={docStatuses.direct_transport}
-                    hasUpload={uploadedForAssessment.direct_transport}
-                    label="Direct Transport (Bill of Lading)"
-                    busy={uploading.direct_transport}
-                    onUpload={() => openFilePicker('direct_transport')}
-                  />
-                  <CheckItem
-                    status={docStatuses.invoice}
-                    hasUpload={uploadedForAssessment.invoice}
-                    label="Commercial Invoice"
-                    busy={uploading.invoice}
-                    onUpload={() => openFilePicker('invoice')}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Step 3 */}
-            <div className="relative flex gap-6 pb-10">
-              <div className="relative z-10 flex w-11 justify-center">
-                <StepNumber number={3} variant="idle" />
-              </div>
-              <div className="pt-1">
-                <div className="text-sm font-semibold text-slate-900">Export Registration Check</div>
-                <div className="mt-1 text-xs text-slate-600">pending</div>
-              </div>
-            </div>
-
-            {/* Step 4 */}
-            <div ref={step4Ref} className="relative flex gap-6">
-              <div className="relative z-10 flex w-11 justify-center">
-                <StepNumber 
-                  number={4} 
-                  variant={summary?.status === 'eligible' ? 'active' : 'idle'} 
-                />
-              </div>
-              <div className="pt-1">
-                <div className="text-sm font-semibold text-slate-900">
-                  Certificate of Origin (CoO) Issuance
-                </div>
-                <div className="mt-1 text-xs text-slate-600">
-                  {summary?.status === 'eligible' ? (
-                    <button
-                      onClick={() => navigate(`/app/certificate/${assessment?.id}`)}
-                      className="mt-2 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white shadow-sm ring-1 ring-indigo-500 hover:bg-indigo-700"
-                    >
-                      <Verify size={16} variant="Bold" className="text-indigo-200" />
-                      View Certificate
-                    </button>
-                  ) : (
-                    <div className="mt-2">
-                      <button
-                        onClick={finalizeEligibility}
-                        disabled={finalizing}
-                        className={
-                          'inline-flex items-center gap-2 rounded-lg px-4 py-2 font-semibold text-white shadow-sm ring-1 ' +
-                          (finalizing
-                            ? 'bg-slate-700 ring-slate-700'
-                            : 'bg-slate-900 ring-slate-800 hover:bg-slate-800')
-                        }
-                      >
-                        <Verify size={16} variant="Bold" className="text-slate-200" />
-                        {finalizing ? 'Zuri AI is processing…' : 'Finalize with Zuri AI'}
-                      </button>
-
-                      {finalizing ? (
-                        <div className="mt-3 rounded-xl bg-white/70 px-4 py-3 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
-                          Running final eligibility checks and validating evidence…
-                        </div>
-                      ) : null}
-
-                      {finalizeError ? (
-                        <div className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-xs font-semibold text-red-700 ring-1 ring-red-200">
-                          {finalizeError}
-                        </div>
-                      ) : null}
-
-                      {!finalizing && !finalizeError && finalizeCompletedAt ? (
-                        <div className="mt-3 rounded-xl bg-white/70 px-4 py-3 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
-                          <div className="font-extrabold text-slate-900">Evidence Summary</div>
-                          <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            <div className="rounded-lg bg-white px-3 py-2 ring-1 ring-slate-200">
-                              <div className="text-[11px] text-slate-600">Supplier</div>
-                              <div className="mt-0.5 text-xs font-extrabold text-slate-900">
-                                {String(docStatuses.supplier_declaration || (uploadedForAssessment.supplier_declaration ? 'pending' : 'not uploaded')).toUpperCase()}
-                              </div>
-                            </div>
-                            <div className="rounded-lg bg-white px-3 py-2 ring-1 ring-slate-200">
-                              <div className="text-[11px] text-slate-600">Transport</div>
-                              <div className="mt-0.5 text-xs font-extrabold text-slate-900">
-                                {String(docStatuses.direct_transport || (uploadedForAssessment.direct_transport ? 'pending' : 'not uploaded')).toUpperCase()}
-                              </div>
-                            </div>
-                            <div className="rounded-lg bg-white px-3 py-2 ring-1 ring-slate-200">
-                              <div className="text-[11px] text-slate-600">Invoice</div>
-                              <div className="mt-0.5 text-xs font-extrabold text-slate-900">
-                                {String(docStatuses.invoice || (uploadedForAssessment.invoice ? 'pending' : 'not uploaded')).toUpperCase()}
-                              </div>
-                              {String(docStatuses.invoice || '').toLowerCase() !== 'verified' && uploadedForAssessment.invoice ? (
-                                <div className="mt-1 text-[11px] text-slate-700">
-                                  Missing:{' '}
-                                  {!invoiceFields?.country ? 'Country of Origin' : null}
-                                  {!invoiceFields?.country && typeof invoiceFields?.price !== 'number' ? ' + ' : null}
-                                  {typeof invoiceFields?.price !== 'number' ? 'Invoice Total' : null}
-                                </div>
-                              ) : null}
-                            </div>
-                          </div>
-                        </div>
-                      ) : null}
+                {/* Step 1 */}
+                <div className="relative flex gap-6 pb-6">
+                  <div className="relative z-10 flex w-11 justify-center">
+                    <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-green-400 shadow-sm ring-1 ring-green-500/40">
+                      <TickCircle size={22} variant="Bold" color="#0f172a" />
                     </div>
-                  )}
+                  </div>
+                  <div className="pt-1">
+                    <div className="text-sm font-semibold text-slate-900">Origin Criteria Meet</div>
+                    <div className="mt-1 text-xs text-slate-600">
+                      {summary ? `Calculation Verified | VA=${summary.va}%` : 'Calculation pending'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 2 */}
+                <div className="relative flex gap-6 pb-8">
+                  <div className="relative z-10 flex w-11 justify-center">
+                    <StepNumber number={2} variant="active" />
+                  </div>
+                  <div className="flex-1 pt-1">
+                    <div className="text-sm font-semibold text-slate-900">
+                      Evidence Upload and Verification
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      <CheckItem
+                        status={docStatuses.supplier_declaration}
+                        hasUpload={uploadedForAssessment.supplier_declaration}
+                        label="Supplier Declaration"
+                        busy={uploading.supplier_declaration}
+                        onUpload={() => openFilePicker('supplier_declaration')}
+                      />
+                      <CheckItem
+                        status={docStatuses.direct_transport}
+                        hasUpload={uploadedForAssessment.direct_transport}
+                        label="Direct Transport (Bill of Lading)"
+                        busy={uploading.direct_transport}
+                        onUpload={() => openFilePicker('direct_transport')}
+                      />
+                      <CheckItem
+                        status={docStatuses.invoice}
+                        hasUpload={uploadedForAssessment.invoice}
+                        label="Commercial Invoice"
+                        busy={uploading.invoice}
+                        onUpload={() => openFilePicker('invoice')}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 3 */}
+                <div className="relative flex gap-6 pb-10">
+                  <div className="relative z-10 flex w-11 justify-center">
+                    <StepNumber number={3} variant="idle" />
+                  </div>
+                  <div className="pt-1">
+                    <div className="text-sm font-semibold text-slate-900">Export Registration Check</div>
+                    <div className="mt-1 text-xs text-slate-600">pending</div>
+                  </div>
+                </div>
+
+                {/* Step 4 */}
+                <div ref={step4Ref} className="relative flex gap-6">
+                  <div className="relative z-10 flex w-11 justify-center">
+                    <StepNumber
+                      number={4}
+                      variant={summary?.status === 'eligible' ? 'active' : 'idle'}
+                    />
+                  </div>
+                  <div className="pt-1">
+                    <div className="text-sm font-semibold text-slate-900">
+                      Certificate of Origin (CoO) Issuance
+                    </div>
+                    <div className="mt-1 text-xs text-slate-600">
+                      {summary?.status === 'eligible' ? (
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <button
+                            onClick={() => navigate(`/app/certificate/${assessment?.id}`)}
+                            className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white shadow-sm ring-1 ring-indigo-500 hover:bg-indigo-700"
+                          >
+                            <Verify size={16} variant="Bold" className="text-indigo-200" />
+                            View Certificate
+                          </button>
+                          <button
+                            onClick={finalizeEligibility}
+                            disabled={finalizing}
+                            className={
+                              'inline-flex items-center gap-2 rounded-lg px-4 py-2 font-semibold text-white shadow-sm ring-1 ' +
+                              (finalizing
+                                ? 'bg-slate-700 ring-slate-700'
+                                : 'bg-slate-900 ring-slate-800 hover:bg-slate-800')
+                            }
+                          >
+                            <Verify size={16} variant="Bold" className="text-slate-200" />
+                            {finalizing ? 'Re-checking…' : 'Re-check Evidence'}
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="mt-2">
+                          <button
+                            onClick={finalizeEligibility}
+                            disabled={finalizing}
+                            className={
+                              'inline-flex items-center gap-2 rounded-lg px-4 py-2 font-semibold text-white shadow-sm ring-1 ' +
+                              (finalizing
+                                ? 'bg-slate-700 ring-slate-700'
+                                : 'bg-slate-900 ring-slate-800 hover:bg-slate-800')
+                            }
+                          >
+                            <Verify size={16} variant="Bold" className="text-slate-200" />
+                            {finalizing ? 'Zuri AI is processing…' : 'Finalize with Zuri AI'}
+                          </button>
+
+                          {finalizing ? (
+                            <div className="mt-3 rounded-xl bg-white/70 px-4 py-3 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
+                              Running final eligibility checks and validating evidence…
+                            </div>
+                          ) : null}
+
+                          {finalizeError ? (
+                            <div className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-xs font-semibold text-red-700 ring-1 ring-red-200">
+                              {finalizeError}
+                            </div>
+                          ) : null}
+
+                          {!finalizing && !finalizeError && finalizeCompletedAt ? (
+                            <div className="mt-3 rounded-xl bg-white/70 px-4 py-3 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
+                              <div className="font-extrabold text-slate-900">Evidence Summary</div>
+                              <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <div className="rounded-lg bg-white px-3 py-2 ring-1 ring-slate-200">
+                                  <div className="text-[11px] text-slate-600">Supplier</div>
+                                  <div className="mt-0.5 text-xs font-extrabold text-slate-900">
+                                    {String(docStatuses.supplier_declaration || (uploadedForAssessment.supplier_declaration ? 'pending' : 'not uploaded')).toUpperCase()}
+                                  </div>
+                                </div>
+                                <div className="rounded-lg bg-white px-3 py-2 ring-1 ring-slate-200">
+                                  <div className="text-[11px] text-slate-600">Transport</div>
+                                  <div className="mt-0.5 text-xs font-extrabold text-slate-900">
+                                    {String(docStatuses.direct_transport || (uploadedForAssessment.direct_transport ? 'pending' : 'not uploaded')).toUpperCase()}
+                                  </div>
+                                </div>
+                                <div className="rounded-lg bg-white px-3 py-2 ring-1 ring-slate-200">
+                                  <div className="text-[11px] text-slate-600">Invoice</div>
+                                  <div className="mt-0.5 text-xs font-extrabold text-slate-900">
+                                    {String(docStatuses.invoice || (uploadedForAssessment.invoice ? 'pending' : 'not uploaded')).toUpperCase()}
+                                  </div>
+                                  {String(docStatuses.invoice || '').toLowerCase() !== 'verified' && uploadedForAssessment.invoice ? (
+                                    <div className="mt-1 text-[11px] text-slate-700">
+                                      Missing:{' '}
+                                      {!invoiceFields?.country ? 'Country of Origin' : null}
+                                      {!invoiceFields?.country && typeof invoiceFields?.price !== 'number' ? ' + ' : null}
+                                      {typeof invoiceFields?.price !== 'number' ? 'Invoice Total' : null}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
             </section>
           </div>
 
