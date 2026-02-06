@@ -171,20 +171,16 @@ async def upload_document(
     except Exception as e:
         print(f"RAG indexing failed: {e}")
 
-    # 3. Trigger Zuri AI Verification (Simplified for Prototype)
-    # In production, this should be a background task (Celery/Redis)
+    # 3. MVP behavior: do not auto-verify non-invoice docs.
+    # We keep them PENDING until the explicit final processing step runs
+    # (POST /assessments/{id}/process-documents).
     try:
         if invoice_processed:
             return db_doc
 
-        prompt = f"Analyze this {doc_type_norm}. Does it look like a valid trade document? Return YES or NO."
-        _ = prompt  # placeholder to keep flow; file content upload not implemented
-
-        # Simulating AI success for now to ensure flow works
-        # (Don't overwrite invoice OCR metadata if already present.)
-        db_doc.status = models.DocStatus.VERIFIED
+        db_doc.status = models.DocStatus.PENDING
         if not db_doc.ai_metadata:
-            db_doc.ai_metadata = '{"verification_confidence": 0.95, "zuri_note": "Valid document structure detected."}'
+            db_doc.ai_metadata = '{"zuri_note": "Uploaded. Awaiting final document processing."}'
         db.commit()
 
         assessment = (
@@ -200,7 +196,7 @@ async def upload_document(
                 doc_status=db_doc.status,
             )
     except Exception as e:
-        print(f"AI Verification failed: {e}")
+        print(f"Document upload post-processing failed: {e}")
 
     return db_doc
 

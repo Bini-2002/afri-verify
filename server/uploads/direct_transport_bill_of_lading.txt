@@ -1,0 +1,12 @@
+BILL OF LADING (SEA)
+
+Carrier: Gulf-Med Shipping
+B/L No: GMS-SEA-77220
+
+Port of Loading: Abidjan, Cote d Ivoire
+Port of Discharge: Tunis, Tunisia
+
+Routing:
+- Direct sea carriage Abidjan -> Tunis
+
+Shipment Date: 2026-02-08

@@ -221,6 +221,34 @@ def get_documents(db: Session, user_id: str):
     return db.query(models.Document).filter(models.Document.user_id == user_id).all()
 
 
+def get_documents_for_assessment(db: Session, *, user_id: str, assessment_id: str):
+    return (
+        db.query(models.Document)
+        .filter(models.Document.user_id == user_id)
+        .filter(models.Document.assessment_id == assessment_id)
+        .order_by(models.Document.uploaded_at.desc())
+        .all()
+    )
+
+
+def get_latest_document_for_assessment(db: Session, *, user_id: str, assessment_id: str, doc_types: list[str]):
+    from sqlalchemy import func
+
+    normalized = [str(t).lower().strip() for t in (doc_types or []) if str(t).strip()]
+    if not normalized:
+        return None
+
+    docs = (
+        db.query(models.Document)
+        .filter(models.Document.user_id == user_id)
+        .filter(models.Document.assessment_id == assessment_id)
+        .filter(func.lower(models.Document.doc_type).in_(normalized))
+        .order_by(models.Document.uploaded_at.desc())
+        .all()
+    )
+    return docs[0] if docs else None
+
+
 def replace_knowledge_chunks_for_document(
     db: Session,
     *,

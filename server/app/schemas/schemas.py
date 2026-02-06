@@ -105,6 +105,21 @@ class OcrResponse(BaseModel):
     fields: OcrExtractionFields
 
 
+class ProcessedDocumentResult(BaseModel):
+    doc_type: str
+    document_id: Optional[str] = None
+    file_name: Optional[str] = None
+    status: str
+    ocr_provider: Optional[str] = None
+    extracted_fields: Optional[dict] = None
+    note: Optional[str] = None
+
+
+class AssessmentProcessResponse(BaseModel):
+    assessment: AssessmentResponse
+    results: List[ProcessedDocumentResult] = []
+
+
 class ShipmentStatusOverview(BaseModel):
     eligible_percent: float = 0.0
     pending_percent: float = 0.0
