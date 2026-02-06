@@ -156,9 +156,13 @@ def parse_fields(extracted_text: str) -> dict[str, Any]:
         "price": price,
         "country": country,
         # Cost breakdown (OCR-driven final assessment)
-        "ex_works_price": _extract_money(r"\b(?:ex\s*[- ]?works|exw)\s*(?:price|value)?\s*[:\-]\s*([0-9][0-9,]*\.?[0-9]{0,2})"),
-        "nom_value": _extract_money(r"\b(?:non\s*[- ]?originating\s*materials?|nom)\s*(?:value|cost)?\s*[:\-]\s*([0-9][0-9,]*\.?[0-9]{0,2})"),
-        "materials_cost": _extract_money(r"\bmaterials?\s*cost\s*[:\-]\s*([0-9][0-9,]*\.?[0-9]{0,2})"),
-        "labor_cost": _extract_money(r"\b(?:labou?r|labor)\s*cost\s*[:\-]\s*([0-9][0-9,]*\.?[0-9]{0,2})"),
-        "overhead_cost": _extract_money(r"\boverhead\s*cost\s*[:\-]\s*([0-9][0-9,]*\.?[0-9]{0,2})"),
+        "ex_works_price": _extract_money(
+            r"\b(?:ex\s*[- ]?works|exw)\s*(?:price|value)?\s*(?:\([^\)]*\))?\s*[:\-]\s*([0-9][0-9,]*\.?[0-9]{0,2})"
+        ),
+        "nom_value": _extract_money(
+            r"\b(?:non\s*[- ]?originating\s*materials?|nom)\s*(?:value|cost)?\s*(?:\([^\)]*\))?\s*[:\-]\s*([0-9][0-9,]*\.?[0-9]{0,2})"
+        ),
+        "materials_cost": _extract_money(r"\bmaterials?\s*cost\s*(?:\([^\)]*\))?\s*[:\-]\s*([0-9][0-9,]*\.?[0-9]{0,2})"),
+        "labor_cost": _extract_money(r"\b(?:labou?r|labor)\s*cost\s*(?:\([^\)]*\))?\s*[:\-]\s*([0-9][0-9,]*\.?[0-9]{0,2})"),
+        "overhead_cost": _extract_money(r"\boverhead\s*cost\s*(?:\([^\)]*\))?\s*[:\-]\s*([0-9][0-9,]*\.?[0-9]{0,2})"),
     }

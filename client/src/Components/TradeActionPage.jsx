@@ -357,12 +357,22 @@ export default function TradeActionPage() {
     setFinalizing(true)
     try {
       // Keep user on this page; show a professional “processing” moment.
-      await new Promise((r) => setTimeout(r, 700))
+      const startedAt = Date.now()
       const res = await apiFetch(`/assessments/${encodeURIComponent(assessment.id)}/process-documents`, { method: 'POST' })
-      await new Promise((r) => setTimeout(r, 900))
-      setAssessment(res?.assessment || res)
 
+      // Keep the “processing” state visible even when the API responds instantly.
+      const minMs = 1800
+      const elapsed = Date.now() - startedAt
+      if (elapsed < minMs) {
+        await new Promise((r) => setTimeout(r, minMs - elapsed))
+      }
+
+      setAssessment(res.assessment)
+      setProcessResults(res.results || [])
+      setFinalizeCompletedAt(Date.now())
       const docs = await apiFetch('/documents/')
+      // Optional: keep error from flashing instantly.
+      await new Promise((r) => setTimeout(r, 600))
       setDocuments(Array.isArray(docs) ? docs : [])
 
       setFinalizeCompletedAt(Date.now())
