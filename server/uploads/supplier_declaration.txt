@@ -1,13 +1,14 @@
 SUPPLIER DECLARATION
 
-Supplier: ABIDJAN CASHEW EXPORTERS (Cote d Ivoire)
-Buyer: TUNIS FOOD INGREDIENTS CO. (Tunisia)
-Product: Cashew Kernels (W320)
+Supplier: KAMPALA TEXTILES LTD (Uganda)
+Buyer: NILE APPAREL EGYPT (Egypt)
+Product: Cotton T-Shirts
 
 Declaration:
-The cashew kernels supplied under Invoice AV-INV-0506 are processed and packed in Cote d Ivoire.
+We declare that the goods supplied under Invoice AV-INV-0008 are produced in Uganda.
+The product is manufactured locally and meets AfCFTA originating requirements.
 
 Signed: ____________________
-Name: Awa Traore
-Title: Export Documentation
+Name: Sarah Namugga
+Title: Compliance Officer
 Date: 2026-02-06

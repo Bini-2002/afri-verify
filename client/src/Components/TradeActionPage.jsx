@@ -28,10 +28,25 @@ function buildGuidance({ assessmentStatus, docStatuses, invoiceFields, hasInvoic
   }
 
   if (status === 'ineligible') {
+    const rejected = []
+    if (supplier === 'rejected') rejected.push('Supplier Declaration')
+    if (direct === 'rejected') rejected.push('Direct Transport')
+    if (invoice === 'rejected') rejected.push('Commercial Invoice')
+
+    if (rejected.length > 0) {
+      return {
+        title: 'Final decision: Ineligible',
+        tone: 'danger',
+        steps: [
+          `A required document was rejected (${rejected.join(', ')}). Replace it with compliant evidence and re-finalize.`,
+        ],
+      }
+    }
+
     return {
       title: 'Final decision: Ineligible',
       tone: 'danger',
-      steps: ['The value addition threshold is not met (VA < 40%). Review EXW and NOM inputs and re-calculate.'],
+      steps: ['The value addition threshold is not met (VA < 40%). Review EXW and NOM values on the invoice and re-finalize.'],
     }
   }
 
@@ -50,6 +65,8 @@ function buildGuidance({ assessmentStatus, docStatuses, invoiceFields, hasInvoic
       const missing = []
       if (!invoiceFields?.country) missing.push('Country of Origin')
       if (typeof invoiceFields?.price !== 'number') missing.push('Invoice Total (numeric)')
+      if (typeof invoiceFields?.ex_works_price !== 'number') missing.push('Ex-Works Price (EXW)')
+      if (typeof invoiceFields?.nom_value !== 'number') missing.push('Non-Originating Materials value (NOM)')
 
       if (missing.length > 0) {
         steps.push(`Update the invoice to include: ${missing.join(' and ')}.`)

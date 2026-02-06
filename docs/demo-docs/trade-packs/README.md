@@ -4,7 +4,7 @@ These packs are designed to stress-test the MVP eligibility flow using different
 
 ## How to run each pack (same flow every time)
 1. Start API (`Server: Run API (uvicorn)`) and Client (`npm run dev`).
-2. In the app, go to **RoO Calculator** and create a **new assessment** using the pack’s inputs.
+2. In the app, go to **Shipment Details** and create a **new assessment** using the pack’s inputs.
 3. Go to **Trade Action** for that assessment.
 4. Upload the three evidence documents (Step 2):
    - Supplier Declaration

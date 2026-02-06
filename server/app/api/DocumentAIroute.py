@@ -188,9 +188,6 @@ async def upload_document(
     except Exception as e:
         print(f"RAG indexing failed: {e}")
 
-    # 3. MVP behavior: do not auto-verify non-invoice docs.
-    # We keep them PENDING until the explicit final processing step runs
-    # (POST /assessments/{id}/process-documents).
     try:
         if invoice_processed:
             return db_doc
