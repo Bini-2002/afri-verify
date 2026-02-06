@@ -63,3 +63,17 @@ def update_tracker(
     if not updated:
         raise HTTPException(status_code=404, detail="Assessment not found")
     return updated
+
+
+@router.post("/{assessment_id}/finalize", response_model=schemas.AssessmentResponse)
+def finalize_assessment(
+    assessment_id: str,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    from fastapi import HTTPException
+
+    updated = crud.finalize_assessment(db=db, user_id=current_user.id, assessment_id=assessment_id)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    return updated

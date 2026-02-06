@@ -70,16 +70,19 @@ async def upload_document(
 
             # Mark VERIFIED only if we extracted something meaningful.
             extracted_any = bool(extracted_text and extracted_text.strip())
-            extracted_fields_any = bool(fields.get("item_name") or fields.get("price") or fields.get("country"))
-            if extracted_any and extracted_fields_any:
+            # For the demo, an invoice is only considered VERIFIED if key compliance fields
+            # are present (amount + origin country). Missing either should remain PENDING
+            # to support Action Required remediation flows.
+            extracted_key_fields = bool(fields.get("country")) and (fields.get("price") is not None)
+            if extracted_any and extracted_key_fields:
                 db_doc.status = models.DocStatus.VERIFIED
             else:
                 db_doc.status = models.DocStatus.PENDING
 
             db.commit()
-            # Only short-circuit the rest of the verification flow when we actually extracted text.
-            # If OCR/text extraction failed, fall through to the prototype verification step.
-            invoice_processed = extracted_any
+            # Always short-circuit for invoices.
+            # We never want the prototype verification step to overwrite invoice status.
+            invoice_processed = True
 
             assessment = (
                 crud.get_assessment(db=db, user_id=current_user.id, assessment_id=assessment_id_norm)
@@ -94,8 +97,35 @@ async def upload_document(
                     doc_status=db_doc.status,
                 )
         except Exception as e:
-            # Don't block upload; fall through.
+            # Don't block upload, but keep invoice in PENDING state and prevent the
+            # prototype verification step from incorrectly marking it VERIFIED.
             print(f"Invoice OCR failed: {e}")
+            db_doc.status = models.DocStatus.PENDING
+            if not db_doc.ai_metadata:
+                db_doc.ai_metadata = json.dumps(
+                    {
+                        "ocr_provider": None,
+                        "extracted_text_excerpt": "",
+                        "extracted_fields": {},
+                        "zuri_note": "Invoice extraction failed; please upload a clearer invoice.",
+                    }
+                )
+            db.add(db_doc)
+            db.commit()
+            invoice_processed = True
+
+            assessment = (
+                crud.get_assessment(db=db, user_id=current_user.id, assessment_id=assessment_id_norm)
+                if assessment_id_norm
+                else None
+            )
+            if assessment:
+                crud.apply_document_to_assessment_tracker(
+                    db=db,
+                    assessment=assessment,
+                    doc_type=doc_type_norm,
+                    doc_status=db_doc.status,
+                )
 
     # 2b. Index for RAG (shipment docs + reference PDFs)
     rag_types = {
@@ -239,7 +269,8 @@ def ocr_document(
             "zuri_note": "OCR + extraction completed." if extracted_text else "OCR did not extract any text.",
         }
     )
-    if extracted_text and (fields.get("item_name") or fields.get("price") or fields.get("country")):
+    extracted_key_fields = bool(fields.get("country")) and (fields.get("price") is not None)
+    if extracted_text and extracted_text.strip() and extracted_key_fields:
         doc.status = models.DocStatus.VERIFIED
     else:
         doc.status = models.DocStatus.PENDING

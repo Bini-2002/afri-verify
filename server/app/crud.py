@@ -183,6 +183,18 @@ def apply_document_to_assessment_tracker(
     db.commit()
 
 
+def finalize_assessment(db: Session, *, user_id: str, assessment_id: str):
+    assessment = get_assessment(db=db, user_id=user_id, assessment_id=assessment_id)
+    if not assessment:
+        return None
+
+    _recompute_assessment_status(assessment)
+    db.add(assessment)
+    db.commit()
+    db.refresh(assessment)
+    return assessment
+
+
 def create_document(
     db: Session,
     file_name: str,
