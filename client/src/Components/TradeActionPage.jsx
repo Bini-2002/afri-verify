@@ -405,7 +405,13 @@ export default function TradeActionPage() {
                       View Certificate
                     </button>
                   ) : (
-                    'Pending verification'
+                    <button
+                      onClick={() => navigate(`/app/finalize/${assessment?.id}`)}
+                      className="mt-2 inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 font-semibold text-white shadow-sm ring-1 ring-slate-800 hover:bg-slate-800"
+                    >
+                      <Verify size={16} variant="Bold" className="text-slate-200" />
+                      Finalize with Zuri AI
+                    </button>
                   )}
                 </div>
               </div>
