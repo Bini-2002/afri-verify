@@ -1,0 +1,31 @@
+SUPPLIER DECLARATION (INELIGIBLE CASE – MAIN INPUT NOT ORIGINATING)
+
+Declaration No: SD-2026-0083
+Date: 2026-02-06
+
+Supplier:
+  Global Oils Trading Co.
+  (Third-country supplier – outside AfCFTA)
+  Email: compliance@globaloils.example
+
+Customer (Manufacturer / Exporter):
+  Nairobi Naturals Manufacturing PLC
+  Nairobi, Kenya
+
+Material Supplied:
+  Material: Refined Shea Butter Base
+  Internal SKU: RAW-SHEA-BASE
+  Monthly Quantity: 8,000 kg (approx.)
+
+Origin Statement:
+  We are unable to declare the above material as AfCFTA-originating.
+  The material is sourced from outside AfCFTA partner states and does not meet originating criteria.
+
+Purpose:
+  This declaration is issued to support compliance review and to highlight that the main input is NON-ORIGINATING.
+
+Authorized Signatory:
+  Name: ____________________
+  Title: Compliance Officer
+  Signature: ____________________
+  Date: 2026-02-06

@@ -1,0 +1,30 @@
+DIRECT TRANSPORT EVIDENCE (INELIGIBLE RISK – TRANS-SHIPMENT NOT UNDER CUSTOMS CONTROL)
+
+Transport Reference: DT-2026-0221
+Date: 2026-02-07
+Mode: Sea Freight
+
+Exporter:
+  Nairobi Naturals Manufacturing PLC, Nairobi, Kenya
+
+Importer:
+  Cape Town Cosmetics (Pty) Ltd., Cape Town, South Africa
+
+Planned Route:
+  Mombasa (Kenya) → Jebel Ali (UAE) → Cape Town (South Africa)
+
+Trans-shipment Note:
+  During trans-shipment at Jebel Ali (UAE), the container was opened for re-handling.
+  The goods were stored in a commercial warehouse for 6 days.
+  Documentation confirming continuous customs control is NOT available.
+
+Risk Statement:
+  This may fail AfCFTA direct transport requirements unless the exporter can provide:
+  - evidence of customs control during trans-shipment, and
+  - proof the goods were not altered beyond preservation/handling.
+
+Signed:
+  Name: ____________________
+  Title: Logistics Coordinator
+  Signature: ____________________
+  Date: 2026-02-07

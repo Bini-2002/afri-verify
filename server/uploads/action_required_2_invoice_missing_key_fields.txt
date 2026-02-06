@@ -1,0 +1,25 @@
+COMMERCIAL INVOICE (ACTION REQUIRED CASE – MISSING KEY FIELDS)
+
+Invoice Ref: INV-ZA-2026-AR-0002
+Date: 2026-02-06
+Bill To: Cape Town Cosmetics (Pty) Ltd.
+Ship To: Cape Town, South Africa
+Invoice Notes: This invoice is incomplete for RoO verification.
+Amount: Fifty Thousand United States Dollars
+Total: Fifty Thousand United States Dollars
+
+Invoice Item: Shea Butter Blend (Cosmetic Grade)
+Invoice Packaging: 25 kg lined cartons
+Invoice Route: Nairobi to Cape Town
+
+Missing/unclear details intentionally included for demo:
+- No HS code stated
+- No country of origin statement
+- No numeric totals/line totals shown in digits
+- No clear unit price / quantity breakdown
+
+Signed:
+  Name: ____________________
+  Title: ____________________
+  Signature: ____________________
+  Date: 2026-02-06

@@ -1,0 +1,29 @@
+BILL OF LADING (DIRECT TRANSPORT EVIDENCE)
+
+B/L No: BL-MSA-2026-2099
+Date of Issue: 2026-02-06
+Carrier: East Africa Shipping Line
+Vessel: MV Uhuru Star
+
+Shipper:
+  Nairobi Naturals Manufacturing PLC, Nairobi, Kenya
+
+Consignee:
+  Cape Town Cosmetics (Pty) Ltd., Cape Town, South Africa
+
+Port of Loading: Mombasa, Kenya
+Port of Discharge: Cape Town, South Africa
+Final Place of Delivery: Cape Town, South Africa
+
+Goods:
+  Shea Butter Blend (Cosmetic Grade)
+  400 cartons
+
+Route / Direct Transport Statement:
+  The goods are transported from Mombasa (Kenya) directly to Cape Town (South Africa).
+  There is no transshipment outside customs control and the goods are not altered.
+
+Signed for Carrier:
+  Name: ____________________
+  Signature: ____________________
+  Date: 2026-02-06
