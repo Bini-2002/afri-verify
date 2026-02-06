@@ -369,12 +369,11 @@ export default function TradeActionPage() {
 
       setAssessment(res.assessment)
       setProcessResults(res.results || [])
-      setFinalizeCompletedAt(Date.now())
       const docs = await apiFetch('/documents/')
-      // Optional: keep error from flashing instantly.
-      await new Promise((r) => setTimeout(r, 600))
       setDocuments(Array.isArray(docs) ? docs : [])
 
+      // Mark completion only after documents/metadata are refreshed to avoid
+      // rendering a stale Evidence Summary.
       setFinalizeCompletedAt(Date.now())
       setTimeout(() => {
         step4Ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -408,7 +407,14 @@ export default function TradeActionPage() {
   }, [documents, assessment])
 
   const invoiceMetadata = useMemo(() => safeParseJson(latestInvoice?.ai_metadata), [latestInvoice])
-  const invoiceFields = invoiceMetadata?.extracted_fields || null
+  const processedInvoiceFields = useMemo(() => {
+    const inv = (processResults || []).find((r) => String(r?.doc_type || '').toLowerCase() === 'invoice')
+    return inv?.extracted_fields || null
+  }, [processResults])
+
+  // Prefer document metadata, but fall back to the latest processing results so the UI
+  // reflects extracted cost breakdown immediately after Finalize.
+  const invoiceFields = invoiceMetadata?.extracted_fields || processedInvoiceFields || null
 
   function openFilePicker(docType) {
     const ref = fileInputs[docType]
