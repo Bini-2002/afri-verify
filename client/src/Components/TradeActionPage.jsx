@@ -11,6 +11,65 @@ import {
 
 import { apiFetch } from '../lib/auth.js'
 
+function buildGuidance({ assessmentStatus, docStatuses, invoiceFields, hasInvoiceUpload }) {
+  const status = String(assessmentStatus || '').toLowerCase()
+  const supplier = String(docStatuses?.supplier_declaration || '').toLowerCase()
+  const direct = String(docStatuses?.direct_transport || '').toLowerCase()
+  const invoice = String(docStatuses?.invoice || '').toLowerCase()
+
+  const steps = []
+
+  if (status === 'eligible') {
+    return {
+      title: 'Final decision: Eligible',
+      tone: 'success',
+      steps: ['All required evidence is verified. You can generate your Certificate of Origin.'],
+    }
+  }
+
+  if (status === 'ineligible') {
+    return {
+      title: 'Final decision: Ineligible',
+      tone: 'danger',
+      steps: ['The value addition threshold is not met (VA < 40%). Review EXW and NOM inputs and re-calculate.'],
+    }
+  }
+
+  if (supplier !== 'verified') {
+    steps.push('Upload a signed Supplier Declaration confirming originating status of inputs.')
+  }
+
+  if (direct !== 'verified') {
+    steps.push('Upload Direct Transport evidence (Bill of Lading) showing shipment route without disqualifying transshipment.')
+  }
+
+  if (invoice !== 'verified') {
+    if (!hasInvoiceUpload) {
+      steps.push('Upload a Commercial Invoice for this assessment.')
+    } else {
+      const missing = []
+      if (!invoiceFields?.country) missing.push('Country of Origin')
+      if (typeof invoiceFields?.price !== 'number') missing.push('Invoice Total (numeric)')
+
+      if (missing.length > 0) {
+        steps.push(`Update the invoice to include: ${missing.join(' and ')}.`)
+      } else {
+        steps.push('Re-upload a clearer invoice (text must be extractable).')
+      }
+    }
+  }
+
+  if (steps.length === 0) {
+    steps.push('Upload the remaining required evidence to proceed.')
+  }
+
+  return {
+    title: 'Final decision: Action Required',
+    tone: 'warning',
+    steps,
+  }
+}
+
 function PillTitle({ children }) {
   return (
     <div className="absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-white px-6 py-1.5 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200">
@@ -152,6 +211,7 @@ export default function TradeActionPage() {
   const [error, setError] = useState('')
   const [finalizing, setFinalizing] = useState(false)
   const [finalizeError, setFinalizeError] = useState('')
+  const [chatUnlocked, setChatUnlocked] = useState(false)
   const [uploading, setUploading] = useState({
     supplier_declaration: false,
     direct_transport: false,
@@ -506,15 +566,6 @@ export default function TradeActionPage() {
                           {finalizeError}
                         </div>
                       ) : null}
-
-                      {!finalizing && summary?.status && summary.status !== 'eligible' ? (
-                        <button
-                          onClick={() => navigate('/app/chat')}
-                          className="mt-3 inline-flex items-center gap-2 rounded-lg bg-amber-100 px-4 py-2 text-xs font-semibold text-slate-900 shadow-sm ring-1 ring-amber-200 hover:bg-amber-200"
-                        >
-                          Talk to Zuri AI
-                        </button>
-                      ) : null}
                     </div>
                   )}
                 </div>
@@ -598,46 +649,70 @@ export default function TradeActionPage() {
           </section>
         </div>
 
-        {/* Ask Zuri */}
+        {/* Zuri Guidance (no prompts) */}
         <section className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 overflow-hidden 2xl:col-start-2">
           <div className="bg-amber-100 px-4 py-3 flex items-center justify-between">
-            <div className="text-sm font-semibold text-slate-900">Ask Zuri</div>
+            <div className="text-sm font-semibold text-slate-900">Zuri Guidance</div>
             <button type="button" aria-label="More" className="text-slate-700 hover:text-slate-900">
               <More size={18} variant="Linear" color="#0f172a" />
             </button>
           </div>
 
           <div className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="text-sm font-semibold text-slate-900">Zuri AI</div>
-              <div className="min-w-0 flex-1 rounded-xl bg-white px-3 py-3 text-sm text-slate-700 shadow-sm ring-1 ring-slate-200 break-words">
-                I’m tracking this shipment. We’re at the evidence stage. Please upload the
-                suppliers declaration to proceed
-              </div>
-            </div>
-          </div>
+            {(() => {
+              const guidance = buildGuidance({
+                assessmentStatus: summary?.status,
+                docStatuses,
+                invoiceFields,
+                hasInvoiceUpload: uploadedForAssessment?.invoice,
+              })
 
-          <div className="border-t border-slate-200 p-4">
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200 hover:bg-slate-50"
-                aria-label="Attach"
-              >
-                <Paperclip size={18} variant="Linear" color="#0f172a" />
-              </button>
-              <input
-                type="text"
-                placeholder="Message…"
-                className="h-10 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-200"
-              />
-              <button
-                type="button"
-                className="h-10 rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
-              >
-                Send
-              </button>
-            </div>
+              const toneClass =
+                guidance.tone === 'success'
+                  ? 'bg-green-50 ring-green-200 text-green-800'
+                  : guidance.tone === 'danger'
+                    ? 'bg-red-50 ring-red-200 text-red-800'
+                    : 'bg-amber-50 ring-amber-200 text-slate-800'
+
+              return (
+                <div className={`rounded-2xl px-4 py-4 ring-1 ${toneClass}`}>
+                  <div className="text-sm font-extrabold">{guidance.title}</div>
+                  <div className="mt-3 space-y-2 text-sm font-semibold">
+                    {guidance.steps.map((s, idx) => (
+                      <div key={idx} className="flex gap-2">
+                        <div className="mt-1 h-2 w-2 rounded-full bg-slate-900/70" aria-hidden="true" />
+                        <div className="min-w-0 flex-1">{s}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {guidance.tone !== 'success' ? (
+                    <div className="mt-4">
+                      {!chatUnlocked ? (
+                        <button
+                          type="button"
+                          onClick={() => setChatUnlocked(true)}
+                          className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm ring-1 ring-slate-800 hover:bg-slate-800"
+                        >
+                          Enable Zuri Chat (uses prompts)
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => navigate('/app/chat')}
+                          className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm ring-1 ring-slate-800 hover:bg-slate-800"
+                        >
+                          Open Zuri Chat
+                        </button>
+                      )}
+                      <div className="mt-2 text-[11px] font-semibold text-slate-700">
+                        Chat is optional and may consume limited AI prompts.
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              )
+            })()}
           </div>
         </section>
       </div>
