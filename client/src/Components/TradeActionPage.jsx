@@ -46,23 +46,60 @@ function UploadChip() {
   )
 }
 
-function CheckItem({ checked, label, onUpload, busy }) {
+function CheckItem({ status, hasUpload, label, onUpload, busy }) {
+  const normalized = String(status || '').toLowerCase()
+  const isVerified = normalized === 'verified'
+  const isPending = normalized === 'pending'
+  const isRejected = normalized === 'rejected'
+
+  const boxClass = isVerified
+    ? 'bg-indigo-500 ring-indigo-600/20'
+    : isRejected
+      ? 'bg-red-300 ring-red-400/40'
+      : isPending || hasUpload
+        ? 'bg-amber-200 ring-amber-300/50'
+        : 'bg-white ring-slate-300'
+
+  const statusLabel = isVerified
+    ? 'Verified'
+    : isRejected
+      ? 'Rejected'
+      : isPending || hasUpload
+        ? 'Pending'
+        : 'Not uploaded'
+
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="flex items-center gap-3">
         <span
           className={
             'inline-flex h-9 w-9 items-center justify-center rounded-lg shadow-sm ring-1 ' +
-            (checked
-              ? 'bg-indigo-500 ring-indigo-600/20'
-              : 'bg-white ring-slate-300')
+            boxClass
           }
         >
-          {checked ? (
+          {isVerified ? (
             <TickSquare size={18} variant="Bold" color="#ffffff" />
+          ) : isPending || hasUpload ? (
+            <TickCircle size={18} variant="Bold" color="#0f172a" />
           ) : null}
         </span>
-        <div className="text-sm font-semibold text-slate-800">{label}</div>
+        <div>
+          <div className="text-sm font-semibold text-slate-800">{label}</div>
+          <div
+            className={
+              'mt-0.5 text-xs font-semibold ' +
+              (isVerified
+                ? 'text-slate-700'
+                : isRejected
+                  ? 'text-red-700'
+                  : isPending || hasUpload
+                    ? 'text-amber-900'
+                    : 'text-slate-500')
+            }
+          >
+            {statusLabel}
+          </div>
+        </div>
       </div>
       <button
         type="button"
@@ -113,7 +150,8 @@ export default function TradeActionPage() {
   const [documents, setDocuments] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-
+  const [finalizing, setFinalizing] = useState(false)
+  const [finalizeError, setFinalizeError] = useState('')
   const [uploading, setUploading] = useState({
     supplier_declaration: false,
     direct_transport: false,
@@ -126,16 +164,30 @@ export default function TradeActionPage() {
     invoice: useRef(null),
   }
 
-  const docChecks = useMemo(() => {
-    const s = (assessment?.docs_supplier_declaration_status || '').toLowerCase()
-    const i = (assessment?.docs_invoice_status || '').toLowerCase()
-    const d = (assessment?.docs_direct_transport_status || '').toLowerCase()
+  const docStatuses = useMemo(() => {
     return {
-      supplier_declaration: s === 'verified',
-      invoice: i === 'verified',
-      direct_transport: d === 'verified',
+      supplier_declaration: assessment?.docs_supplier_declaration_status || '',
+      invoice: assessment?.docs_invoice_status || '',
+      direct_transport: assessment?.docs_direct_transport_status || '',
     }
   }, [assessment])
+
+  const uploadedForAssessment = useMemo(() => {
+    if (!assessment?.id) return { supplier_declaration: false, invoice: false, direct_transport: false }
+    const mine = documents.filter((d) => String(d?.assessment_id || '') === String(assessment.id))
+
+    const hasSupplier = mine.some((d) => String(d?.doc_type || '').toLowerCase() === 'supplier_declaration')
+    const hasDirect = mine.some((d) => {
+      const t = String(d?.doc_type || '').toLowerCase()
+      return t === 'direct_transport' || t === 'direct transport' || t === 'bill_of_lading' || t === 'bill of lading'
+    })
+    const hasInvoice = mine.some((d) => {
+      const t = String(d?.doc_type || '').toLowerCase()
+      return t === 'invoice' || t === 'commercial_invoice' || t === 'commercial invoice'
+    })
+
+    return { supplier_declaration: hasSupplier, direct_transport: hasDirect, invoice: hasInvoice }
+  }, [documents, assessment])
 
   useEffect(() => {
     let cancelled = false
@@ -199,6 +251,26 @@ export default function TradeActionPage() {
       setError(e?.message || 'Upload failed')
     } finally {
       setUploading((prev) => ({ ...prev, [docType]: false }))
+    }
+  }
+
+  async function finalizeEligibility() {
+    if (!assessment?.id || finalizing) return
+    setFinalizeError('')
+    setFinalizing(true)
+    try {
+      // Keep user on this page; show a professional “processing” moment.
+      await new Promise((r) => setTimeout(r, 700))
+      const res = await apiFetch(`/assessments/${encodeURIComponent(assessment.id)}/finalize`, { method: 'POST' })
+      await new Promise((r) => setTimeout(r, 900))
+      setAssessment(res)
+
+      const docs = await apiFetch('/documents/')
+      setDocuments(Array.isArray(docs) ? docs : [])
+    } catch (e) {
+      setFinalizeError(e?.message || 'Final AI check failed')
+    } finally {
+      setFinalizing(false)
     }
   }
 
@@ -351,19 +423,22 @@ export default function TradeActionPage() {
 
                 <div className="mt-4 space-y-3">
                   <CheckItem
-                    checked={docChecks.supplier_declaration}
+                    status={docStatuses.supplier_declaration}
+                    hasUpload={uploadedForAssessment.supplier_declaration}
                     label="Supplier Declaration"
                     busy={uploading.supplier_declaration}
                     onUpload={() => openFilePicker('supplier_declaration')}
                   />
                   <CheckItem
-                    checked={docChecks.direct_transport}
+                    status={docStatuses.direct_transport}
+                    hasUpload={uploadedForAssessment.direct_transport}
                     label="Direct Transport (Bill of Lading)"
                     busy={uploading.direct_transport}
                     onUpload={() => openFilePicker('direct_transport')}
                   />
                   <CheckItem
-                    checked={docChecks.invoice}
+                    status={docStatuses.invoice}
+                    hasUpload={uploadedForAssessment.invoice}
                     label="Commercial Invoice"
                     busy={uploading.invoice}
                     onUpload={() => openFilePicker('invoice')}
@@ -405,13 +480,42 @@ export default function TradeActionPage() {
                       View Certificate
                     </button>
                   ) : (
-                    <button
-                      onClick={() => navigate(`/app/finalize/${assessment?.id}`)}
-                      className="mt-2 inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 font-semibold text-white shadow-sm ring-1 ring-slate-800 hover:bg-slate-800"
-                    >
-                      <Verify size={16} variant="Bold" className="text-slate-200" />
-                      Finalize with Zuri AI
-                    </button>
+                    <div className="mt-2">
+                      <button
+                        onClick={finalizeEligibility}
+                        disabled={finalizing}
+                        className={
+                          'inline-flex items-center gap-2 rounded-lg px-4 py-2 font-semibold text-white shadow-sm ring-1 ' +
+                          (finalizing
+                            ? 'bg-slate-700 ring-slate-700'
+                            : 'bg-slate-900 ring-slate-800 hover:bg-slate-800')
+                        }
+                      >
+                        <Verify size={16} variant="Bold" className="text-slate-200" />
+                        {finalizing ? 'Zuri AI is processing…' : 'Finalize with Zuri AI'}
+                      </button>
+
+                      {finalizing ? (
+                        <div className="mt-3 rounded-xl bg-white/70 px-4 py-3 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
+                          Running final eligibility checks and validating evidence…
+                        </div>
+                      ) : null}
+
+                      {finalizeError ? (
+                        <div className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-xs font-semibold text-red-700 ring-1 ring-red-200">
+                          {finalizeError}
+                        </div>
+                      ) : null}
+
+                      {!finalizing && summary?.status && summary.status !== 'eligible' ? (
+                        <button
+                          onClick={() => navigate('/app/chat')}
+                          className="mt-3 inline-flex items-center gap-2 rounded-lg bg-amber-100 px-4 py-2 text-xs font-semibold text-slate-900 shadow-sm ring-1 ring-amber-200 hover:bg-amber-200"
+                        >
+                          Talk to Zuri AI
+                        </button>
+                      ) : null}
+                    </div>
                   )}
                 </div>
               </div>

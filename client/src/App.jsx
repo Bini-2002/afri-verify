@@ -12,7 +12,6 @@ import SettingsPage from './Components/SettingsPage.jsx'
 import OAuthCallbackPage from './Components/OAuthCallbackPage.jsx'
 import RequireAuth from './Components/RequireAuth.jsx'
 import CertificatePage from './Components/CertificatePage.jsx'
-import FinalizeAssessmentPage from './Components/FinalizeAssessmentPage.jsx'
 
 export default function App() {
   return (
@@ -28,15 +27,6 @@ export default function App() {
           element={
             <RequireAuth>
               <CertificatePage />
-            </RequireAuth>
-          }
-        />
-
-        <Route
-          path="/app/finalize/:assessmentId"
-          element={
-            <RequireAuth>
-              <FinalizeAssessmentPage />
             </RequireAuth>
           }
         />
