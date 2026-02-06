@@ -25,13 +25,14 @@ function FieldSelect({ id, value, onChange, children }) {
   )
 }
 
-function FieldInput({ id, value, onChange }) {
+function FieldInput({ id, value, onChange, ...props }) {
   return (
     <input
       id={id}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       className="mt-2 block h-8 w-full rounded-md border border-slate-400 bg-sky-50 px-3 text-sm text-slate-900 shadow-sm focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-200"
+      {...props}
     />
   )
 }
@@ -39,13 +40,15 @@ function FieldInput({ id, value, onChange }) {
 export default function RooCalculatorPage() {
   const navigate = useNavigate()
   const productId = useId()
+  const hsCodeId = useId()
   const destinationId = useId()
   const exFactoryId = useId()
   const nonOriginId = useId()
   const localMaterialId = useId()
   const laborId = useId()
 
-  const [productHs, setProductHs] = useState('0901')
+  const [productName, setProductName] = useState('Coffee')
+  const [hsCode, setHsCode] = useState('0901')
   const [destination, setDestination] = useState('Egypt')
 
   // Defaults chosen to reflect the screenshot example (42%)
@@ -57,18 +60,82 @@ export default function RooCalculatorPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  const productName = useMemo(() => {
-    switch (productHs) {
-      case '0901':
-        return 'Coffee'
-      case '1801':
-        return 'Cocoa Beans'
-      case '1006':
-        return 'Rice'
-      default:
-        return 'Product'
-    }
-  }, [productHs])
+  const productSuggestions = useMemo(
+    () => [
+      'Shea Butter',
+      'Coffee',
+      'Cocoa Beans',
+      'Rice',
+      'Cotton T-shirts',
+      'Roasted Coffee',
+      'Refined Shea Butter (Cosmetic Grade)',
+      'Tea',
+      'Sugar',
+      'Cashew Nuts',
+      'Sesame Seeds',
+      'Avocados',
+      'Mangoes',
+      'Pineapples',
+      'Bananas',
+      'Maize (Corn)',
+      'Wheat Flour',
+      'Palm Oil',
+      'Leather Goods',
+      'Textiles',
+      'Footwear',
+      'Pharmaceutical Products',
+      'Ceramics',
+    ],
+    [],
+  )
+
+  const hsCodeSuggestions = useMemo(
+    () => [
+      '0901',
+      '1801',
+      '1006',
+      '1515.90',
+      '6109',
+      '5208',
+      '8703',
+      '8711',
+      '0901.21',
+      '0901.22',
+    ],
+    [],
+  )
+
+  const destinationSuggestions = useMemo(
+    () => [
+      'Egypt',
+      'Ghana',
+      'Kenya',
+      'Rwanda',
+      'South Africa',
+      'Nigeria',
+      'Morocco',
+      'Algeria',
+      'Tunisia',
+      'Senegal',
+      'Côte d’Ivoire',
+      'Cameroon',
+      'Uganda',
+      'Tanzania',
+      'Ethiopia',
+      'Zambia',
+      'Zimbabwe',
+      'Botswana',
+      'Namibia',
+      'Mozambique',
+      'Angola',
+      'DR Congo',
+      'Somalia',
+      'Sudan',
+      'Madagascar',
+      'Mauritius',
+    ],
+    [],
+  )
 
   const valueAddedPercent = useMemo(() => {
     const ex = Number.parseFloat(exFactoryPrice)
@@ -102,7 +169,7 @@ export default function RooCalculatorPage() {
     try {
       const payload = {
         product_name: productName,
-        hs_code: productHs,
+        hs_code: hsCode,
         destination_country: destination,
         ex_works_price: ex,
         nom_value: nom,
@@ -137,23 +204,52 @@ export default function RooCalculatorPage() {
             <div className="text-xl font-medium text-slate-700">Shipment Details</div>
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
               <div>
-                <FieldLabel htmlFor={productId}>Product(HS Code)</FieldLabel>
-                <FieldSelect id={productId} value={productHs} onChange={setProductHs}>
-                  <option value="0901">Coffee (0901)</option>
-                  <option value="1801">Cocoa Beans (1801)</option>
-                  <option value="1006">Rice (1006)</option>
-                </FieldSelect>
+                <FieldLabel htmlFor={productId}>Product Name</FieldLabel>
+                <FieldInput
+                  id={productId}
+                  value={productName}
+                  onChange={setProductName}
+                  list="product-suggestions"
+                  placeholder="Start typing (e.g., Shea Butter)"
+                />
+                <datalist id="product-suggestions">
+                  {productSuggestions.map((p) => (
+                    <option key={p} value={p} />
+                  ))}
+                </datalist>
+              </div>
+
+              <div>
+                <FieldLabel htmlFor={hsCodeId}>HS Code</FieldLabel>
+                <FieldInput
+                  id={hsCodeId}
+                  value={hsCode}
+                  onChange={setHsCode}
+                  list="hs-suggestions"
+                  placeholder="Start typing (e.g., 1515.90)"
+                  inputMode="decimal"
+                />
+                <datalist id="hs-suggestions">
+                  {hsCodeSuggestions.map((c) => (
+                    <option key={c} value={c} />
+                  ))}
+                </datalist>
               </div>
 
               <div>
                 <FieldLabel htmlFor={destinationId}>Destination Country</FieldLabel>
-                <FieldSelect id={destinationId} value={destination} onChange={setDestination}>
-                  <option>Egypt</option>
-                  <option>Ghana</option>
-                  <option>Kenya</option>
-                  <option>Rwanda</option>
-                  <option>South Africa</option>
-                </FieldSelect>
+                <FieldInput
+                  id={destinationId}
+                  value={destination}
+                  onChange={setDestination}
+                  list="destination-suggestions"
+                  placeholder="Start typing (e.g., Kenya)"
+                />
+                <datalist id="destination-suggestions">
+                  {destinationSuggestions.map((c) => (
+                    <option key={c} value={c} />
+                  ))}
+                </datalist>
               </div>
             </div>
           </div>

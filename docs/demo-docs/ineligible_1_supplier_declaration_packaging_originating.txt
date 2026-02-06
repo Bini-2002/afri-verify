@@ -1,0 +1,30 @@
+SUPPLIER DECLARATION (PACKAGING – ORIGINATING)
+
+Declaration No: SD-2026-0084
+Date: 2026-02-06
+Validity: 2026-02-06 to 2026-12-31
+
+Supplier:
+  Nairobi Packaging Works Ltd.
+  Industrial Area, Nairobi, Kenya
+  Email: compliance@nairobipackaging.example
+
+Customer (Manufacturer / Exporter):
+  Nairobi Naturals Manufacturing PLC
+  Nairobi, Kenya
+
+Materials Supplied:
+  Material: Food-grade lined cartons (25 kg capacity)
+  Internal SKU: PKG-25KG-LINED
+
+Origin Statement:
+  We hereby declare that the cartons described above are originating in Kenya.
+
+Purpose:
+  Supporting evidence for AfCFTA preferential claim documentation.
+
+Authorized Signatory:
+  Name: Peter Otieno
+  Title: Compliance Officer
+  Signature: ____________________
+  Date: 2026-02-06
