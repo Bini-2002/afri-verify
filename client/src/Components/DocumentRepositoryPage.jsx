@@ -431,7 +431,7 @@ export default function DocumentRepositoryPage() {
       <Modal open={uploadOpen} title="Upload New Document" onClose={() => (uploading ? null : setUploadOpen(false))}>
         {assessments.length === 0 ? (
           <div className="rounded-xl bg-sky-50 px-4 py-3 text-sm font-semibold text-slate-700 ring-1 ring-slate-200">
-            No assessments found yet. Create an assessment in the RoO Calculator first, then upload documents linked to that shipment.
+            No assessments found yet. Create an assessment in Shipment Details first, then upload documents linked to that shipment.
           </div>
         ) : null}
 

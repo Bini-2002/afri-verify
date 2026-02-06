@@ -1,5 +1,6 @@
 from .schemas import (
     AssessmentCreate,
+    AssessmentDraftCreate,
     AssessmentProcessResponse,
     AssessmentResponse,
     AssessmentTrackerUpdate,
@@ -23,6 +24,7 @@ from .schemas import (
 
 __all__ = [
     "AssessmentCreate",
+    "AssessmentDraftCreate",
     "AssessmentProcessResponse",
     "AssessmentResponse",
     "AssessmentTrackerUpdate",

@@ -47,6 +47,12 @@ class AssessmentCreate(BaseModel):
     labor_cost: Optional[float] = None
     overhead_cost: Optional[float] = None
 
+
+class AssessmentDraftCreate(BaseModel):
+    product_name: str
+    hs_code: str
+    destination_country: str
+
 class AssessmentResponse(AssessmentCreate):
     id: str
     va_percentage: Optional[float] = None

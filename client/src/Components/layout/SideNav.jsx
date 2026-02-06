@@ -11,7 +11,7 @@ import {
 const NAV_ITEMS = [
   { key: 'dashboard', label: 'Dashboard', to: '/app/dashboard', Icon: Profile2User },
   { key: 'chat', label: 'AI Trade Chat', to: '/app/chat', Icon: MessageText },
-  { key: 'roo', label: 'RoO Calculator', to: '/app/roo', Icon: Calculator },
+  { key: 'roo', label: 'Shipment Details', to: '/app/roo', Icon: Calculator },
   { key: 'trade', label: 'Trade Action', to: '/app/trade-action', Icon: Activity },
   { key: 'docs', label: 'My Document', to: '/app/documents', Icon: Folder },
   { key: 'settings', label: 'Setting', to: '/app/settings', Icon: Setting2 },

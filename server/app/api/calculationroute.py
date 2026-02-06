@@ -15,10 +15,11 @@ router = APIRouter(
 
 @router.post("/draft", response_model=schemas.AssessmentResponse)
 def create_draft_assessment(
+    payload: schemas.AssessmentDraftCreate,
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    return crud.create_draft_assessment(db=db, user_id=current_user.id)
+    return crud.create_draft_assessment(db=db, user_id=current_user.id, payload=payload)
 
 
 @router.post("/calculate", response_model=schemas.AssessmentResponse)

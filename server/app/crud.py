@@ -92,14 +92,14 @@ def create_assessment(db: Session, assessment: schemas.AssessmentCreate, user_id
     return db_assessment
 
 
-def create_draft_assessment(db: Session, *, user_id: str):
+def create_draft_assessment(db: Session, *, user_id: str, payload: schemas.AssessmentDraftCreate):
     # OCR-first: create a placeholder assessment so documents can be attached.
     # VA is intentionally unknown until documents are processed.
     db_assessment = models.ComplianceAssessment(
         user_id=user_id,
-        product_name="Pending OCR",
-        hs_code="—",
-        destination_country="—",
+        product_name=(payload.product_name or "Pending OCR"),
+        hs_code=(payload.hs_code or "—"),
+        destination_country=(payload.destination_country or "—"),
         ex_works_price=0.0,
         nom_value=0.0,
         va_percentage=None,

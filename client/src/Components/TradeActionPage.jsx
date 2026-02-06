@@ -271,7 +271,14 @@ export default function TradeActionPage() {
             }
             const list = await apiFetch('/assessments/my-assessments')
             if (!Array.isArray(list) || list.length === 0) {
-              const draft = await apiFetch('/assessments/draft', { method: 'POST' })
+              const draft = await apiFetch('/assessments/draft', {
+                method: 'POST',
+                body: JSON.stringify({
+                  product_name: 'Pending OCR',
+                  hs_code: '—',
+                  destination_country: '—',
+                }),
+              })
               if (draft?.id) {
                 setSearchParams({ assessmentId: draft.id }, { replace: true })
               }
