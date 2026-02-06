@@ -204,6 +204,8 @@ export default function TradeActionPage() {
   const navigate = useNavigate()
   const assessmentIdFromUrl = searchParams.get('assessmentId')
 
+  const step4Ref = useRef(null)
+
   const [assessment, setAssessment] = useState(null)
   const [profile, setProfile] = useState(null)
   const [documents, setDocuments] = useState([])
@@ -212,6 +214,7 @@ export default function TradeActionPage() {
   const [finalizing, setFinalizing] = useState(false)
   const [finalizeError, setFinalizeError] = useState('')
   const [chatUnlocked, setChatUnlocked] = useState(false)
+  const [finalizeCompletedAt, setFinalizeCompletedAt] = useState(null)
   const [uploading, setUploading] = useState({
     supplier_declaration: false,
     direct_transport: false,
@@ -327,6 +330,11 @@ export default function TradeActionPage() {
 
       const docs = await apiFetch('/documents/')
       setDocuments(Array.isArray(docs) ? docs : [])
+
+      setFinalizeCompletedAt(Date.now())
+      setTimeout(() => {
+        step4Ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 50)
     } catch (e) {
       setFinalizeError(e?.message || 'Final AI check failed')
     } finally {
@@ -519,7 +527,7 @@ export default function TradeActionPage() {
             </div>
 
             {/* Step 4 */}
-            <div className="relative flex gap-6">
+            <div ref={step4Ref} className="relative flex gap-6">
               <div className="relative z-10 flex w-11 justify-center">
                 <StepNumber 
                   number={4} 
@@ -564,6 +572,40 @@ export default function TradeActionPage() {
                       {finalizeError ? (
                         <div className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-xs font-semibold text-red-700 ring-1 ring-red-200">
                           {finalizeError}
+                        </div>
+                      ) : null}
+
+                      {!finalizing && !finalizeError && finalizeCompletedAt ? (
+                        <div className="mt-3 rounded-xl bg-white/70 px-4 py-3 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
+                          <div className="font-extrabold text-slate-900">Evidence Summary</div>
+                          <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div className="rounded-lg bg-white px-3 py-2 ring-1 ring-slate-200">
+                              <div className="text-[11px] text-slate-600">Supplier</div>
+                              <div className="mt-0.5 text-xs font-extrabold text-slate-900">
+                                {String(docStatuses.supplier_declaration || (uploadedForAssessment.supplier_declaration ? 'pending' : 'not uploaded')).toUpperCase()}
+                              </div>
+                            </div>
+                            <div className="rounded-lg bg-white px-3 py-2 ring-1 ring-slate-200">
+                              <div className="text-[11px] text-slate-600">Transport</div>
+                              <div className="mt-0.5 text-xs font-extrabold text-slate-900">
+                                {String(docStatuses.direct_transport || (uploadedForAssessment.direct_transport ? 'pending' : 'not uploaded')).toUpperCase()}
+                              </div>
+                            </div>
+                            <div className="rounded-lg bg-white px-3 py-2 ring-1 ring-slate-200">
+                              <div className="text-[11px] text-slate-600">Invoice</div>
+                              <div className="mt-0.5 text-xs font-extrabold text-slate-900">
+                                {String(docStatuses.invoice || (uploadedForAssessment.invoice ? 'pending' : 'not uploaded')).toUpperCase()}
+                              </div>
+                              {String(docStatuses.invoice || '').toLowerCase() !== 'verified' && uploadedForAssessment.invoice ? (
+                                <div className="mt-1 text-[11px] text-slate-700">
+                                  Missing:{' '}
+                                  {!invoiceFields?.country ? 'Country of Origin' : null}
+                                  {!invoiceFields?.country && typeof invoiceFields?.price !== 'number' ? ' + ' : null}
+                                  {typeof invoiceFields?.price !== 'number' ? 'Invoice Total' : null}
+                                </div>
+                              ) : null}
+                            </div>
+                          </div>
                         </div>
                       ) : null}
                     </div>
