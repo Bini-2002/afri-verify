@@ -1,0 +1,18 @@
+COMMERCIAL INVOICE
+
+Invoice No: AV-INV-0102
+Date: 2026-02-06
+Exporter: NAIROBI ROASTERS PLC
+Importer: CAPE TOWN COFFEE TRADERS
+Currency: USD
+
+Item Description
+Single-Origin Roasted Coffee Beans (Arabica)
+Grade: AA
+
+Qty: 260 bags
+Unit Price: 32.50
+Amount Due: 8,450.50
+
+Origin Country: Kenya
+Payment Terms: Net 14

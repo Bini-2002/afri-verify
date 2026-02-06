@@ -1,0 +1,17 @@
+BILL OF LADING (SEA)
+
+Carrier: Gulf of Guinea Lines
+B/L No: GGL-SEA-77421
+Vessel: MV WEST AFRICA STAR
+
+Port of Loading: Tema, Ghana
+Port of Discharge: Mombasa, Kenya
+Final Delivery: Nairobi, Kenya
+
+Routing:
+- Direct sea carriage Tema -> Mombasa
+- Inland delivery to Nairobi
+
+Seal No: SEAL-883190
+Container: TGHU-1029384
+Date of Shipment: 2026-02-07

@@ -1,0 +1,17 @@
+COMMERCIAL INVOICE
+
+Invoice No: AV-INV-0304
+Date: 2026-02-06
+Exporter: LAGOS PHARMA WORKS LTD
+Importer: ACCRA WHOLESALE MEDICALS
+Currency: USD
+
+Goods Description
+Paracetamol Tablets 500mg (Blister packs)
+Batch: PCT-500-2026A
+
+Quantity: 1400 cartons
+Unit Price: 4.27
+Grand Total: 5,980.00
+
+Country of Origin (Manufacture): Nigeria

@@ -1,0 +1,13 @@
+BILL OF LADING (SEA)
+
+Carrier: West Coast Maritime
+B/L No: WCM-SEA-88014
+
+Port of Loading: Lagos, Nigeria
+Port of Discharge: Tema, Ghana
+
+Routing:
+- Direct sea carriage Lagos -> Tema
+
+Container: WCMU-5531902
+Shipment Date: 2026-02-07

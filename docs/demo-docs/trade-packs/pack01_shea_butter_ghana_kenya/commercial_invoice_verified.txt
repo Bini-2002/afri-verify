@@ -1,0 +1,23 @@
+COMMERCIAL INVOICE
+
+Invoice No: AV-INV-0001
+Date: 2026-02-06
+Exporter: KUMASI SHEA CO-OP
+Exporter Address: Kumasi, Ghana
+Importer: NAIROBI NATURALS LTD
+Importer Address: Nairobi, Kenya
+Incoterms: EXW
+Currency: USD
+
+Goods Description
+Shea Butter (Refined) - food/cosmetic grade
+
+Quantity: 500 cartons
+Unit Price: 33.44
+Invoice Total: 16,720.00
+
+Country of Origin: Ghana
+
+Notes:
+- Shipment contains only refined shea butter.
+- Packed in sealed 20kg cartons.

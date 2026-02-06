@@ -1,0 +1,13 @@
+SUPPLIER DECLARATION
+
+Supplier: ALEXANDRIA TEXTILES S.A.E (Egypt)
+Buyer: KIGALI APPAREL DISTRIBUTORS (Rwanda)
+Product: Cotton T-Shirts
+
+Declaration:
+The goods supplied under Invoice AV-INV-0203 are manufactured in Egypt.
+
+Signed: ____________________
+Name: Mariam El-Sayed
+Title: Quality & Compliance
+Date: 2026-02-06

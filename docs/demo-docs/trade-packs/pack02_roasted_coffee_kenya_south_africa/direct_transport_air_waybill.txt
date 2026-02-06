@@ -1,0 +1,14 @@
+AIR WAYBILL
+
+AWB No: KQ-228-99110022
+Carrier: Kenya Airways Cargo
+
+Airport of Departure: Nairobi (NBO)
+Airport of Destination: Johannesburg (JNB)
+Final Delivery: Cape Town, South Africa
+
+Routing:
+- NBO -> JNB (air)
+- Road transfer to Cape Town
+
+Shipment Date: 2026-02-07

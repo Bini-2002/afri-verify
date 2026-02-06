@@ -1,0 +1,20 @@
+COMMERCIAL INVOICE
+
+Invoice No: AV-INV-0506
+Date: 2026-02-06
+Exporter: ABIDJAN CASHEW EXPORTERS
+Importer: TUNIS FOOD INGREDIENTS CO.
+Currency: USD
+
+Description
+Cashew Kernels (W320 grade)
+Packaging: 25kg vacuum-sealed cartons
+
+Quantity: 200 cartons
+Unit Price: 21.00
+Invoice Total: 4,200.00
+
+Country of Origin: 
+
+Note:
+Origin country field is intentionally left blank for Action Required testing.

@@ -1,0 +1,12 @@
+BILL OF LADING (SEA)
+
+Carrier: Maghreb Atlantic Lines
+B/L No: MAL-SEA-99101
+
+Port of Loading: Casablanca, Morocco
+Port of Discharge: Dakar, Senegal
+
+Routing:
+- Direct sea carriage Casablanca -> Dakar
+
+Shipment Date: 2026-02-08

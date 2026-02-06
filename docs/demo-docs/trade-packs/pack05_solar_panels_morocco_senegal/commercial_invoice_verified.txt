@@ -1,0 +1,17 @@
+COMMERCIAL INVOICE
+
+Invoice No: AV-INV-0405
+Date: 2026-02-06
+Exporter: CASABLANCA SOLAR EXPORTS
+Importer: DAKAR RENEWABLES SARL
+Currency: USD
+
+Item Description
+Photovoltaic Solar Panels (Monocrystalline)
+Model: PV-MONO-450W
+
+Quantity: 120 units
+Unit Price: 210.00
+Invoice Total: 25,200.00
+
+Country of Origin: Morocco
