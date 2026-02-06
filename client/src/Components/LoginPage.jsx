@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import logo from '../images/logo-removebg-preview.png'
 import heroSide from '../images/cyber-map.png'
@@ -56,6 +56,11 @@ export default function LoginPage() {
   const emailId = useId()
   const passwordId = useId()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const returnTo = typeof location.state?.from === 'string' && location.state.from
+    ? location.state.from
+    : '/app/dashboard'
 
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState('')
@@ -108,7 +113,7 @@ export default function LoginPage() {
 
                 const data = await res.json()
                 setToken(data.access_token)
-                navigate('/app/dashboard', { replace: true })
+                navigate(returnTo, { replace: true })
               } catch (err) {
                 setError(err.message || 'Login failed')
               } finally {

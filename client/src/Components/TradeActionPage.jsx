@@ -230,6 +230,7 @@ export default function TradeActionPage() {
   const [assessment, setAssessment] = useState(null)
   const [profile, setProfile] = useState(null)
   const [documents, setDocuments] = useState([])
+  const [processResults, setProcessResults] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [finalizing, setFinalizing] = useState(false)

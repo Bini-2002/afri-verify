@@ -1,15 +1,14 @@
 BILL OF LADING (SEA)
 
-Carrier: Lake-to-Sea Logistics
-B/L No: LTS-SEA-88008
-Vessel: MV EAST AFRICA TRADER
+Carrier: Atlantic Maghreb Lines
+B/L No: AML-SEA-0010
+Vessel: MV NORTH ATLANTIC
 
-Port of Loading: Mombasa, Kenya
-Port of Discharge: Alexandria, Egypt
-Final Delivery: Cairo, Egypt
+Port of Loading: Tema, Ghana
+Port of Discharge: Casablanca, Morocco
 
 Routing:
-- Direct sea carriage Mombasa -> Alexandria
-- Under customs control during transit
+- Direct sea carriage Tema -> Casablanca
+- Under customs control
 
 Date of Shipment: 2026-02-07

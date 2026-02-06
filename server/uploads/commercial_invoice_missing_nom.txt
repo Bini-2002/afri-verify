@@ -1,0 +1,28 @@
+COMMERCIAL INVOICE
+
+Invoice No: AV-INV-0010
+Date: 2026-02-06
+Exporter: AKWAABA COCOA EXPORTS
+Exporter Address: Accra, Ghana
+Importer: CASABLANCA CHOCOLATIER
+Importer Address: Casablanca, Morocco
+Incoterms: EXW
+Currency: USD
+
+Goods Description
+Cocoa Beans (Fermented & Dried)
+
+Quantity: 200 sacks
+Unit Price: 40.00
+Invoice Total: 8,000.00
+
+Country of Origin: Ghana
+
+Cost Breakdown (for AfCFTA Rules of Origin)
+Ex-Works Price (EXW): 8,000.00
+Materials Cost: 5,000.00
+Labor Cost: 650.00
+Overhead Cost: 350.00
+
+NOTE:
+- Non-Originating Materials (NOM) line is missing. System should return Action Required.

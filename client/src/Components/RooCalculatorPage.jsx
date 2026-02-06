@@ -143,9 +143,31 @@ export default function RooCalculatorPage() {
         body: JSON.stringify(payload),
       })
 
-      navigate(`/app/trade-action?assessmentId=${encodeURIComponent(assessment.id)}`)
+      const id = assessment?.id
+      if (!id) {
+        setError('Draft assessment was created but no id was returned. Please try again.')
+        return
+      }
+
+      const target = `/app/trade-action?assessmentId=${encodeURIComponent(id)}`
+
+      // SPA navigation first, but keep a hard redirect fallback for demo reliability.
+      navigate(target)
+      setTimeout(() => {
+        try {
+          if (window.location.pathname !== '/app/trade-action') {
+            window.location.assign(target)
+          }
+        } catch {
+          // ignore
+        }
+      }, 50)
     } catch (e) {
-      setError(e?.message || 'Failed to run assessment')
+      if (e?.status === 401) {
+        setError('Session expired. Please log in again.')
+      } else {
+        setError(e?.message || 'Failed to create shipment assessment')
+      }
     } finally {
       setSubmitting(false)
     }
