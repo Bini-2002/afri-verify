@@ -68,14 +68,18 @@ async def upload_document(
                 }
             )
 
-            # Only mark VERIFIED if we extracted something meaningful.
-            if extracted_text and (fields.get("item_name") or fields.get("price") or fields.get("country")):
+            # Mark VERIFIED only if we extracted something meaningful.
+            extracted_any = bool(extracted_text and extracted_text.strip())
+            extracted_fields_any = bool(fields.get("item_name") or fields.get("price") or fields.get("country"))
+            if extracted_any and extracted_fields_any:
                 db_doc.status = models.DocStatus.VERIFIED
             else:
                 db_doc.status = models.DocStatus.PENDING
 
             db.commit()
-            invoice_processed = True
+            # Only short-circuit the rest of the verification flow when we actually extracted text.
+            # If OCR/text extraction failed, fall through to the prototype verification step.
+            invoice_processed = extracted_any
 
             assessment = (
                 crud.get_assessment(db=db, user_id=current_user.id, assessment_id=assessment_id_norm)

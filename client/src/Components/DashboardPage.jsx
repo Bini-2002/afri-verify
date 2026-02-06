@@ -73,6 +73,22 @@ function LegendRow({ color, label }) {
   )
 }
 
+function StatusBadge({ status }) {
+  const s = String(status || '').toLowerCase().trim()
+  const label = s ? s.replace(/_/g, ' ') : 'pending'
+
+  let cls = 'bg-sky-100 text-sky-700 ring-sky-200'
+  if (s === 'eligible') cls = 'bg-green-100 text-green-700 ring-green-200'
+  else if (s === 'ineligible') cls = 'bg-red-100 text-red-700 ring-red-200'
+  else if (s === 'action_required' || s === 'action required') cls = 'bg-red-100 text-red-700 ring-red-200'
+
+  return (
+    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 ${cls}`}>
+      {label}
+    </span>
+  )
+}
+
 export default function DashboardPage() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
@@ -280,7 +296,7 @@ export default function DashboardPage() {
                             {new Date(row.data_added_at).toLocaleString()}
                           </div>
                           <div className="h-10 px-3 border-r border-t border-slate-300 bg-sky-100/70 text-xs font-semibold text-slate-800 flex items-center">
-                            {String(row.application_status || '').replace(/_/g, ' ')}
+                            <StatusBadge status={row.application_status} />
                           </div>
                           <div className="h-10 px-3 border-t border-slate-300 bg-sky-50 text-xs font-semibold text-slate-800 flex items-center">
                             <button

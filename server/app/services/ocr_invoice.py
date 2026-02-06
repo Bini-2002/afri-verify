@@ -1,5 +1,6 @@
 import os
 import re
+from pathlib import Path
 from typing import Any, Optional
 
 
@@ -13,10 +14,20 @@ def extract_text(file_path: str) -> tuple[str, str]:
 
     Returns (extracted_text, provider)
 
-    Provider is one of: 'pypdf', 'tesseract', 'none'
+    Provider is one of: 'pypdf', 'tesseract', 'text', 'none'
     """
 
     ext = os.path.splitext(file_path)[1].lower()
+
+    # Plain text demo docs (e.g., docs/demo-docs/*.txt)
+    if ext in (".txt", ".md"):
+        try:
+            return _clean_text(Path(file_path).read_text(encoding="utf-8")), "text"
+        except Exception:
+            try:
+                return _clean_text(Path(file_path).read_text(encoding="latin-1")), "text"
+            except Exception:
+                return "", "none"
 
     # PDFs: prefer embedded text extraction first
     if ext == ".pdf":
@@ -63,15 +74,32 @@ def parse_fields(extracted_text: str) -> dict[str, Any]:
 
     text = extracted_text or ""
 
-    # Country of origin / country
+    # Country of origin
     country: Optional[str] = None
-    m = re.search(r"(?:country\s+of\s+origin|origin\s+country|country)\s*[:\-]?\s*([A-Za-z][A-Za-z\s]{2,40})", text, re.IGNORECASE)
+    m = re.search(
+        r"(?:country\s+of\s+origin(?:\s*\([^\)]*\))?|origin\s+country)\s*[:\-]\s*([A-Za-z][A-Za-z ]{1,40})",
+        text,
+        re.IGNORECASE,
+    )
     if m:
         country = m.group(1).strip()
 
-    # Price: try 'total'/'amount due' first
+    # Price: try explicit invoice total first
     price: Optional[float] = None
-    m = re.search(r"(?:total\s+amount|amount\s+due|grand\s+total|total)\s*[:\-]?\s*([0-9][0-9,]*\.?[0-9]{0,2})", text, re.IGNORECASE)
+    m = re.search(
+        r"invoice\s+total(?:\s*\([^\)]*\))?\s*[:\-]\s*([0-9][0-9,]*\.?[0-9]{0,2})",
+        text,
+        re.IGNORECASE,
+    )
+    if m:
+        try:
+            price = float(m.group(1).replace(",", ""))
+        except Exception:
+            price = None
+
+    # Fallback: try 'total'/'amount due'
+    if price is None:
+        m = re.search(r"(?:total\s+amount|amount\s+due|grand\s+total|total)\s*[:\-]\s*([0-9][0-9,]*\.?[0-9]{0,2})", text, re.IGNORECASE)
     if m:
         try:
             price = float(m.group(1).replace(",", ""))

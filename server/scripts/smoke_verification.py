@@ -121,12 +121,12 @@ def main() -> int:
     docs = r.json()
     print(f"Documents in account: {len(docs)}")
 
-    status = doc.get("status")
-    if status != "VERIFIED":
-        print(f"Unexpected status (expected VERIFIED): {status}")
+    status = str(doc.get("status") or "").strip().lower()
+    if status != "verified":
+        print(f"Unexpected status (expected verified): {status}")
         return 2
 
-    print("OK: document marked VERIFIED")
+    print("OK: document marked verified")
     return 0
 
 

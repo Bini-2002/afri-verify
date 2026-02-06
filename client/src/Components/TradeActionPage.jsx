@@ -245,6 +245,14 @@ export default function TradeActionPage() {
     }
   }, [assessment, profile])
 
+  const statusPillClass = useMemo(() => {
+    const s = summary?.status
+    if (s === 'eligible') return 'bg-green-300 ring-1 ring-green-400/50'
+    if (s === 'ineligible') return 'bg-red-300 ring-1 ring-red-400/50'
+    if (s === 'action_required' || s === 'action required') return 'bg-red-300 ring-1 ring-red-400/50'
+    return 'bg-sky-200 ring-1 ring-sky-300/50'
+  }, [summary])
+
   return (
     <AppLayout active="trade" title="Trade Action">
       <input
@@ -298,7 +306,7 @@ export default function TradeActionPage() {
             </div>
 
             <div className="mt-6 flex justify-center">
-              <div className="rounded-full bg-green-300 px-6 py-2 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-green-400/50">
+              <div className={`rounded-full px-6 py-2 text-sm font-semibold text-slate-900 shadow-sm ${statusPillClass}`}>
                 {summary
                   ? `${summary.status.toUpperCase()} (VA=${summary.va}%)`
                   : loading
