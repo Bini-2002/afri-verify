@@ -1,13 +1,13 @@
 SUPPLIER DECLARATION
 
-Supplier: DAR SOLAR SUPPLY (Tanzania)
-Buyer: KIGALI ENERGY LTD (Rwanda)
-Product: Solar Inverters
+Supplier: KENYA HIGHLAND COFFEE CO. (Kenya)
+Buyer: ALGIERS ROASTERS (Algeria)
+Product: Roasted Coffee Beans
 
 Declaration:
-We declare that the goods supplied under Invoice AV-INV-0011 are produced in Tanzania.
+We declare that the goods supplied under Invoice AV-INV-0009 are produced in Kenya.
 
 Signed: ____________________
-Name: Neema Kweka
-Title: Compliance Officer
+Name: David Ochieng
+Title: Export Compliance
 Date: 2026-02-06
