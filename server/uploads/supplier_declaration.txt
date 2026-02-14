@@ -1,13 +1,14 @@
 SUPPLIER DECLARATION
 
-Supplier: KENYA HIGHLAND COFFEE CO. (Kenya)
-Buyer: ALGIERS ROASTERS (Algeria)
-Product: Roasted Coffee Beans
+Supplier: KAMPALA TEXTILES LTD (Uganda)
+Buyer: NILE APPAREL EGYPT (Egypt)
+Product: Cotton T-Shirts
 
 Declaration:
-We declare that the goods supplied under Invoice AV-INV-0009 are produced in Kenya.
+We declare that the goods supplied under Invoice AV-INV-0008 are produced in Uganda.
+The product is manufactured locally and meets AfCFTA originating requirements.
 
 Signed: ____________________
-Name: David Ochieng
-Title: Export Compliance
+Name: Sarah Namugga
+Title: Compliance Officer
 Date: 2026-02-06
