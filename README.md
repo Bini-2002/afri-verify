@@ -84,13 +84,23 @@ The following gallery showcases the core user interface and the end-to-end compl
 
 ## 3. Tech Stack 🧰
 
-| Frontend (client/) 📱                                                             | Backend (server/) 🛠️                                                             |
-|-----------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
-| - **JavaScript + React 19**: Builds the interactive UI (auth screens, dashboard, calculator, documents, and chat pages).<br><img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" /><br>- **Vite**: Fast development server + production bundling.<br>- **Tailwind CSS 4**: Utility-first styling system for consistent UI design.<br><img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind" /><br>- **React Router 7**: Client-side routing (public pages vs authenticated `/app/*` pages). | - **Python + FastAPI**: REST API layer for authentication, profiles, assessments, and document operations.<br><img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" /><br><img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" /><br>- **Uvicorn**: ASGI server used to run FastAPI locally and in deployment.<br>- **SQLAlchemy + SQLite**: ORM + database persistence for users, compliance assessments, and documents.<br><img src="https://img.shields.io/badge/SQLAlchemy-D71F00?style=for-the-badge" alt="SQLAlchemy" /><br><img src="https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite" /> |
+- <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" /> — UI screens and components.
+- <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" /> — Dev server + production build.
+- <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" /> — Styling and layout.
+- <img src="https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=reactrouter&logoColor=white" alt="React Router" /> — Client-side routing.
 
-| Security & Auth 🔒                                                                | AI / Integrations 🤖                                                              |
-|-----------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
-| - **python-jose**: JWT signing/verification for secure token-based sessions.<br>- **passlib[bcrypt]**: Password hashing and verification. | - **google-generativeai (Gemini)**: Powers the Zuri assistant endpoint for trade guidance.<br><img src="https://img.shields.io/badge/Google_Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini" /><br>- **httpx**: HTTP client for OAuth token exchange and external API calls. |
+- <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" /> — Backend language.
+- <img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" /> — REST API framework.
+- <img src="https://img.shields.io/badge/Uvicorn-0F172A?style=for-the-badge" alt="Uvicorn" /> — ASGI server.
+- <img src="https://img.shields.io/badge/SQLAlchemy-D71F00?style=for-the-badge" alt="SQLAlchemy" /> — ORM for database access.
+- <img src="https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite" /> — Demo database.
+
+- <img src="https://img.shields.io/badge/JWT-111827?style=for-the-badge" alt="JWT" /> — Token-based sessions.
+- <img src="https://img.shields.io/badge/python--jose-111827?style=for-the-badge" alt="python-jose" /> — JWT signing/verification.
+- <img src="https://img.shields.io/badge/bcrypt-111827?style=for-the-badge" alt="bcrypt" /> — Password hashing (via `passlib`).
+
+- <img src="https://img.shields.io/badge/Google_Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini" /> — Powers the Zuri assistant endpoint.
+- <img src="https://img.shields.io/badge/httpx-111827?style=for-the-badge" alt="httpx" /> — HTTP client for integrations.
 
 ---
 
