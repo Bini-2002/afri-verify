@@ -104,3 +104,100 @@ The following gallery showcases the core user interface and the end-to-end compl
 
 ---
 
+## 4. Getting Started 🏁
+
+### Prerequisites
+- **Git**
+- **Node.js 18+** (npm included)
+- **Python 3.11+**
+
+### Installation
+Clone the repository:
+```bash
+git clone https://github.com/Bini-2002/afri-verify.git
+cd afri-verify
+```
+
+### Backend Setup (FastAPI)
+From the `server/` folder:
+
+```powershell
+cd server
+python -m venv .venv
+.
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt --default-timeout=180
+```
+
+Create your environment file:
+- Copy `server/.env.example` → `server/.env`
+- Set at least `SECRET_KEY`
+- (Optional) set `GEMINI_API_KEY` to enable the Zuri AI endpoint
+
+Run the API:
+```powershell
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+You can verify the server is up at:
+- `http://127.0.0.1:8000/`
+
+### Frontend Setup (React)
+From the `client/` folder:
+```powershell
+cd ..\client
+npm install
+npm run dev
+```
+
+Open the app at:
+- `http://localhost:5173/`
+
+### Quick Auth Test (JWT)
+With the API running:
+```powershell
+cd ..\server
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke_auth.ps1
+```
+
+### Notes
+- **SQLite schema changes:** the backend uses `create_all()` (no migrations). For a clean run after model changes, delete `server/afriverify.db` and restart the server.
+
+---
+
+## 5. Contributing & Issues 🤝
+
+Contributions, bug reports, and feature ideas are welcome.
+
+### How to Contribute
+- **Fork the repo** and create a feature branch.
+- Keep PRs focused (one feature/fix per PR) and include a short description + screenshots if UI changes.
+- If your change affects the API contract, update the README/docs accordingly.
+
+Suggested workflow:
+1) Open an issue describing what you want to change.
+2) Submit a Pull Request referencing the issue.
+
+### Reporting Issues / Requesting Features
+- Use **GitHub Issues** to report bugs, request features, or suggest improvements.
+- Include:
+	- Steps to reproduce
+	- Expected vs actual behavior
+	- Screenshots/logs (if applicable)
+	- Your OS, Node version, and Python version
+
+### Code of Conduct
+This project aims to be welcoming and inclusive. Please be respectful in issues and PR discussions.
+
+---
+
+## 6. Conclusion 🙏
+
+Thanks for checking out **AfriVerify**. If you find this project useful for AfCFTA compliance workflows (or want to build on it), please consider starring the repository and sharing feedback via Issues.
+
+## 7. License
+
+This project is licensed under the **MIT License** — see [LICENSE](LICENSE).
+
+
