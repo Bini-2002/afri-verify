@@ -19,6 +19,32 @@
 </p>
 
 
+
+## 1. Project Description 🚀
+
+**AfriVerify** represents a pioneering full-stack web application designed to empower African small and medium-sized enterprises (SMEs) in navigating the complexities of the African Continental Free Trade Area (AfCFTA) Rules of Origin (RoO). By leveraging AI-driven compliance tools, it enables users to efficiently evaluate RoO adherence and systematically organize evidentiary documentation essential for securing preferential tariffs.
+
+---
+
+
+Built with a modern stack:
+- **Frontend**: React (Vite + Tailwind CSS) 📱
+- **Backend**: FastAPI + SQLite (SQLAlchemy) ⚙️
+
+Users can manage compliance assessments, upload supporting documents, and interact with **Zuri** — an AI assistant powered by Google Gemini for trade guidance 🤖.
+
+---
+
+## 2. Key Features ✨
+
+- **JWT Authentication** (Email/Password) with secure token-based access 🔒
+- **User Profile** with Home Country & Target Market settings 📍
+- **RoO Value-Added Engine** with instant eligibility status 📊
+- **Compliance Assessments** tracking per product/shipment 📋
+- **Document Repository** for uploading and linking evidence 📂
+- **Zuri AI Chat** – context-aware trade assistant (Gemini) 💬
+
+
 ### 📸 Project Demo
 
 The following gallery showcases the core user interface and the end-to-end compliance journey within the application.
